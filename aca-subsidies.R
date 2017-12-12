@@ -94,36 +94,49 @@ premiums_for <- function(df, fips_code, metal_level, insured_, age_, num_childre
 # premiums_for(tidy_aca_2018, 19153, "Silver", "Couple", 60, 0)
 # premiums_for(tidy_aca_2018, 19153, "Bronze", "Couple", 60, 0)
 
-federal_poverty_level <- function(year, state, family_size) {
+federal_poverty_level <- Vectorize(function(year, state, family_size) {
   switch (as.character(year),
           `2016` = {
-            switch(state,
-                   AK = 14720 + 5200 * (family_size - 1),
-                   HI = 13550 + 4780 * (family_size - 1),
+            switch(as.character(state),
+                   "AK" = 14720 + 5200 * (family_size - 1),
+                   "HI" = 13550 + 4780 * (family_size - 1),
                    11770 + 4160 * (family_size - 1))
           },
           `2017` = {
-            switch(state,
-                   AK = 14840 + 5180 * (family_size - 1),
-                   HI = 13670 + 4760 * (family_size - 1),
+            switch(as.character(state),
+                   "AK" = 14840 + 5180 * (family_size - 1),
+                   "HI" = 13670 + 4760 * (family_size - 1),
                    11880 + 4140 * (family_size - 1))
           },
           `2018` = {
-            switch(state,
-                   AK = 15060 + 5230 * (family_size - 1),
-                   HI = 13860 + 4810 * (family_size - 1),
+            switch(as.character(state),
+                   "AK" = 15060 + 5230 * (family_size - 1),
+                   "HI" = 13860 + 4810 * (family_size - 1),
                    12060 + 4180 * (family_size - 1))
           }
   )
+})
+
+calc_cliff <- function(metal_level, insured, age, num_children) {
+  if (insured == "Couple") {
+    family_size <- 2 + num_children
+  } else {
+    family_size <- 1 + num_children
+  }
+
+  tidy_aca_2018 %>%
+    filter(`Metal Level` == !!metal_level, insured == !!insured, age == !!age, num_children == !!num_children) %>%
+    group_by(`FIPS County Code`) %>%
+    filter(premium == min(premium)) %>%
+    mutate(
+      cliff = max(
+        ref_silver_premium * 12 - 0.095 * 4 * federal_poverty_level(2018, `State Code`, family_size),
+        0.0)
+      )
 }
 
 # Proof of concept for couple age 60 no children
-poc <- tidy_aca_2018 %>%
-  filter(`Metal Level` == "Bronze", insured == "Couple", age == 60, num_children == 0) %>%
-  group_by(`FIPS County Code`) %>%
-  filter(premium == min(premium)) %>%
-  mutate(cliff = (ref_silver_premium * 12 - 0.095 * 4 * federal_poverty_level(2018, "IA", 2)))
-
+poc <- calc_cliff("Bronze", "Couple", 60, 0)
 summary(poc)
 
 poc[poc$cliff == max(poc$cliff), ]
