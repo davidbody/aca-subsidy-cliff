@@ -3,21 +3,53 @@ library(forcats)
 library(choroplethr)
 library(here)
 
+federal_poverty_level <- Vectorize(function(year, state, family_size) {
+  switch (as.character(year),
+          `2016` = {
+            switch(as.character(state),
+                   "AK" = 14720 + 5200 * (family_size - 1),
+                   "HI" = 13550 + 4780 * (family_size - 1),
+                   11770 + 4160 * (family_size - 1))
+          },
+          `2017` = {
+            switch(as.character(state),
+                   "AK" = 14840 + 5180 * (family_size - 1),
+                   "HI" = 13670 + 4760 * (family_size - 1),
+                   11880 + 4140 * (family_size - 1))
+          },
+          `2018` = {
+            switch(as.character(state),
+                   "AK" = 15060 + 5230 * (family_size - 1),
+                   "HI" = 13860 + 4810 * (family_size - 1),
+                   12060 + 4180 * (family_size - 1))
+          }
+  )
+})
+
+expanded_medicaid <- function(state) {
+  !(state %in% c("AL", "FL", "GA", "ID", "KS", "ME", "MS", "MO", "NE", "NC", "OK", "SC", "SD", "TN", "TX", "UT", "VA", "WI", "WY"))
+}
+
 subsidy_table <-
-  data_frame(lower_percent = c(0, 1.33, 1.5, 2.0, 2.5, 3.0),
+  data_frame(lower_percent = c(0.0, 1.33, 1.5, 2.0, 2.5, 3.0),
              upper_percent = c(1.33, 1.5, 2.0, 2.5, 3.0, 4.0),
              lower_cap = c(2.0, 3.0, 4.0, 6.3, 8.05, 9.5),
              upper_cap = c(2.0, 4.0, 6.3, 8.05, 9.5, 9.5))
 
-annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_premium) {
+annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_premium, state) {
   income_percent_of_fpl <- (annual_income / federal_poverty_level)
 
-  # This is only true for states that expanded medicaid
-  if (income_percent_of_fpl < 1.33) {
-    return(0.0)
+  if (expanded_medicaid(state)) {
+    if (income_percent_of_fpl < 1.38) {
+      return(0.0)
+    }
+  } else {
+    if (income_percent_of_fpl < 1.0) {
+      return(0.0)
+    }
   }
 
-  if (income_percent_of_fpl > 4.0) {
+  if (income_percent_of_fpl >= 4.0) {
     return(0.0)
   }
 
@@ -34,7 +66,6 @@ annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_
   } else {
     cap <- lower_cap
   }
-  # cat("cap = ", cap, "\n")
 
   subsidy <- silver_monthly_premium * 12 - (cap * annual_income / 100.0)
 
@@ -67,7 +98,7 @@ tidy_aca_2018 <- aca2018 %>%
          num_children = as_factor(num_children)) %>%
   distinct()
 
-silver_premiums <- tidy_aca_2018 %>%
+reference_silver_premiums <- tidy_aca_2018 %>%
   filter(`Metal Level` == "Silver") %>%
   select(`FIPS County Code`, insured, age, num_children, premium) %>%
   group_by(`FIPS County Code`, insured, age, num_children) %>%
@@ -75,7 +106,7 @@ silver_premiums <- tidy_aca_2018 %>%
   select(-premium) %>%
   distinct()
 
-tidy_aca_2018 <- inner_join(tidy_aca_2018, silver_premiums, by = c("FIPS County Code", "insured", "age", "num_children"))
+tidy_aca_2018 <- inner_join(tidy_aca_2018, reference_silver_premiums, by = c("FIPS County Code", "insured", "age", "num_children"))
 
 # tidy_aca_2018 %>%
 #   group_by(`FIPS County Code`, insured, age, num_children, `Metal Level`) %>%
@@ -93,29 +124,7 @@ premiums_for <- function(df, fips_code, metal_level, insured_, age_, num_childre
 
 # premiums_for(tidy_aca_2018, 19153, "Silver", "Couple", 60, 0)
 # premiums_for(tidy_aca_2018, 19153, "Bronze", "Couple", 60, 0)
-
-federal_poverty_level <- Vectorize(function(year, state, family_size) {
-  switch (as.character(year),
-          `2016` = {
-            switch(as.character(state),
-                   "AK" = 14720 + 5200 * (family_size - 1),
-                   "HI" = 13550 + 4780 * (family_size - 1),
-                   11770 + 4160 * (family_size - 1))
-          },
-          `2017` = {
-            switch(as.character(state),
-                   "AK" = 14840 + 5180 * (family_size - 1),
-                   "HI" = 13670 + 4760 * (family_size - 1),
-                   11880 + 4140 * (family_size - 1))
-          },
-          `2018` = {
-            switch(as.character(state),
-                   "AK" = 15060 + 5230 * (family_size - 1),
-                   "HI" = 13860 + 4810 * (family_size - 1),
-                   12060 + 4180 * (family_size - 1))
-          }
-  )
-})
+# premiums_for(tidy_aca_2018, 19153, "Bronze", "Couple", 50, 2)
 
 calc_cliff <- function(metal_level, insured, age, num_children) {
   if (insured == "Couple") {
@@ -129,13 +138,15 @@ calc_cliff <- function(metal_level, insured, age, num_children) {
     group_by(`FIPS County Code`) %>%
     filter(premium == min(premium)) %>%
     mutate(
-      cliff = max(
-        ref_silver_premium * 12 - 0.095 * 4 * federal_poverty_level(2018, `State Code`, family_size),
-        0.0)
+      cliff = min(
+        max(
+          ref_silver_premium * 12 - 0.095 * 4 * federal_poverty_level(2018, `State Code`, family_size),
+          0.0),
+        12 * premium)
       )
 }
 
-# Proof of concept for couple age 60 no children
+# Proof of concept for couple age 60, 0 children
 poc <- calc_cliff("Bronze", "Couple", 60, 0)
 summary(poc)
 
@@ -158,12 +169,12 @@ c <- poc %>%
 county_choropleth(c, num_colors = 1) + scale_fill_continuous(low="#eff3ff", high="#084594", na.value="white")
 # end POC
 
-incomes <- seq(0, 70000, by = 100)
+incomes <- seq(0, 100000, by = 100)
 fpl <- federal_poverty_level(2018, "IA", 2)
 silver_premium <- premiums_for(tidy_aca_2018, 19153, "Silver", "Couple", 60, 0)$premium
 
 subsidy_fn <- function(income) {
-  annual_subsidy(income, fpl, silver_premium)
+  annual_subsidy(income, fpl, silver_premium, "IA")
 }
 
 subsidies <- sapply(incomes, subsidy_fn)
@@ -178,7 +189,6 @@ g <- g + geom_vline(xintercept = fpl, linetype = 2)
 g <- g + geom_text(label = "100%",
                    x = fpl,
                    y = 15000, angle = 90,
-                   # fontface = "plain",
                    hjust = 1, vjust = -1)
 g <- g + geom_vline(data = subsidy_table,
                     aes(xintercept = upper_percent * fpl),
