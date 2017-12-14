@@ -183,8 +183,6 @@ subsidy_fn <- function(income) {
 subsidies <- sapply(incomes, subsidy_fn)
 
 df <- data_frame(income = incomes, subsidy = subsidies)
-df$slope <- (df$subsidy - lag(df$subsidy)) / (df$income - lag(df$income))
-df$pfpl <- df$income / fpl
 
 g <- ggplot(df, aes(x = income, y = subsidy))
 g <- g + geom_line()
