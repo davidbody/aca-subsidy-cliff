@@ -176,6 +176,9 @@ incomes <- seq(0, 100000, by = 100)
 fpl <- federal_poverty_level(2018, "IA", 2)
 silver_premium <- premiums_for(tidy_aca_2018, 19153, "Silver", "Couple", 60, 0)$premium
 
+# TODO: don't hard code percentage
+cliff <- silver_premium * 12 - 0.0956 * 4 * fpl
+
 subsidy_fn <- function(income) {
   annual_subsidy(income, fpl, silver_premium, "IA")
 }
@@ -199,5 +202,8 @@ g <- g + geom_text(data = subsidy_table_2018,
                        x = upper_percent * fpl,
                        y = 15000),
                    angle = 90, hjust = 1, vjust = -1)
+g <- g + geom_segment(aes(x = 0, y = cliff, xend = 4 * fpl, yend = cliff, color = "red"), show.legend = FALSE)
+g <- g + geom_text(aes(x = -1000, y = cliff, label = round(cliff), color = "red", hjust = "right"), show.legend = FALSE)
 g <- g + theme_minimal()
 g
+
