@@ -30,15 +30,17 @@ expanded_medicaid <- function(state) {
   !(state %in% c("AL", "FL", "GA", "ID", "KS", "ME", "MS", "MO", "NE", "NC", "OK", "SC", "SD", "TN", "TX", "UT", "VA", "WI", "WY"))
 }
 
-subsidy_table <-
+# Rev. Proc. 2017-36
+subsidy_table_2018 <-
   data_frame(lower_percent = c(0.0, 1.33, 1.5, 2.0, 2.5, 3.0),
              upper_percent = c(1.33, 1.5, 2.0, 2.5, 3.0, 4.0),
-             lower_cap = c(2.0, 3.0, 4.0, 6.3, 8.05, 9.5),
-             upper_cap = c(2.0, 4.0, 6.3, 8.05, 9.5, 9.5))
+             lower_cap = c(2.01, 3.02, 4.03, 6.34, 8.10, 9.56),
+             upper_cap = c(2.01, 4.03, 6.34, 8.10, 9.5, 9.56))
 
 annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_premium, state) {
   income_percent_of_fpl <- (annual_income / federal_poverty_level)
 
+  # https://www.kff.org/health-reform/issue-brief/explaining-health-care-reform-questions-about-health/
   if (expanded_medicaid(state)) {
     if (income_percent_of_fpl < 1.38) {
       return(0.0)
@@ -53,7 +55,7 @@ annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_
     return(0.0)
   }
 
-  applicable_caps <- subsidy_table %>%
+  applicable_caps <- subsidy_table_2018 %>%
     filter(lower_percent <= income_percent_of_fpl, upper_percent > income_percent_of_fpl)
 
   lower_percent <- applicable_caps$lower_percent
@@ -98,15 +100,15 @@ tidy_aca_2018 <- aca2018 %>%
          num_children = as_factor(num_children)) %>%
   distinct()
 
-reference_silver_premiums <- tidy_aca_2018 %>%
+second_lowest_silver_premiums <- tidy_aca_2018 %>%
   filter(`Metal Level` == "Silver") %>%
   select(`FIPS County Code`, insured, age, num_children, premium) %>%
   group_by(`FIPS County Code`, insured, age, num_children) %>%
-  mutate(ref_silver_premium = nth(premium, n = -2, order_by = -premium, default = min(premium))) %>%
+  mutate(second_lowest_silver_premium = nth(premium, n = -2, order_by = -premium, default = min(premium))) %>%
   select(-premium) %>%
   distinct()
 
-tidy_aca_2018 <- inner_join(tidy_aca_2018, reference_silver_premiums, by = c("FIPS County Code", "insured", "age", "num_children"))
+tidy_aca_2018 <- inner_join(tidy_aca_2018, second_lowest_silver_premiums, by = c("FIPS County Code", "insured", "age", "num_children"))
 
 # tidy_aca_2018 %>%
 #   group_by(`FIPS County Code`, insured, age, num_children, `Metal Level`) %>%
@@ -140,7 +142,7 @@ calc_cliff <- function(metal_level, insured, age, num_children) {
     mutate(
       cliff = min(
         max(
-          ref_silver_premium * 12 - 0.095 * 4 * federal_poverty_level(2018, `State Code`, family_size),
+          second_lowest_silver_premium * 12 - 0.095 * 4 * federal_poverty_level(2018, `State Code`, family_size),
           0.0),
         12 * premium)
       )
@@ -190,10 +192,10 @@ g <- g + geom_text(label = "100%",
                    x = fpl,
                    y = 15000, angle = 90,
                    hjust = 1, vjust = -1)
-g <- g + geom_vline(data = subsidy_table,
+g <- g + geom_vline(data = subsidy_table_2018,
                     aes(xintercept = upper_percent * fpl),
                     linetype = 2)
-g <- g + geom_text(data = subsidy_table,
+g <- g + geom_text(data = subsidy_table_2018,
                    aes(label = paste(upper_percent * 100, "%"),
                        x = upper_percent * fpl,
                        y = 15000),
