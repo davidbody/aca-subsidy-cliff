@@ -142,7 +142,8 @@ calc_cliff <- function(metal_level, insured, age, num_children) {
     mutate(
       cliff = min(
         max(
-          second_lowest_silver_premium * 12 - 0.095 * 4 * federal_poverty_level(2018, `State Code`, family_size),
+          # TODO: don't hard code percentage
+          second_lowest_silver_premium * 12 - 0.0956 * 4 * federal_poverty_level(2018, `State Code`, family_size),
           0.0),
         12 * premium)
       )
