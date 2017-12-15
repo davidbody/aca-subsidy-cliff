@@ -3,6 +3,60 @@ library(forcats)
 library(choroplethr)
 library(here)
 
+aca2018 <- read_csv(here("data", "QHP_PY2018_Medi-_Indi-_Land.csv"))
+
+premium_columns <- grepl("^Premium(?!.*Scenarios)|^Couple|^Individual", names(aca2018), perl = TRUE)
+premium_column_names <- names(aca2018)[premium_columns]
+
+tidy_aca_2018 <- aca2018 %>%
+  gather(type, premium, premium_column_names) %>%
+  select(`State Code`, `FIPS County Code`, `County Name`, `Metal Level`, premium, type) %>%
+  mutate(`State Code` = as_factor(`State Code`),
+         `FIPS County Code` = as_factor(`FIPS County Code`),
+         `County Name` = as_factor(`County Name`),
+         `Metal Level` = as_factor(`Metal Level`)) %>%
+  mutate(insured = case_when(str_detect(type, "Premium Child") ~ "Child",
+                             str_detect(type, "Premium Adult Individual|Individual\\+") ~ "Individual",
+                             str_detect(type, "Premium Couple|Couple\\+") ~ "Couple",
+                             TRUE ~ "NA"),
+         age = str_extract(type, "\\d+(-\\d+)?$"),
+         num_children = str_match(type, "(\\d+( or more)?) [Cc]hild(ren)?")[,2]) %>%
+  select(-type) %>%
+  mutate(num_children = ifelse(is.na(num_children), "0", num_children),
+         premium = as.numeric(gsub("\\$", "", premium))) %>%
+  mutate(insured = as_factor(insured),
+         age = as_factor(age),
+         num_children = as_factor(num_children)) %>%
+  distinct()
+
+second_lowest_silver_premiums <- tidy_aca_2018 %>%
+  filter(`Metal Level` == "Silver") %>%
+  select(`FIPS County Code`, insured, age, num_children, premium) %>%
+  group_by(`FIPS County Code`, insured, age, num_children) %>%
+  mutate(second_lowest_silver_premium = nth(premium, n = -2, order_by = -premium, default = min(premium))) %>%
+  select(-premium) %>%
+  distinct()
+
+tidy_aca_2018 <- inner_join(tidy_aca_2018, second_lowest_silver_premiums, by = c("FIPS County Code", "insured", "age", "num_children"))
+
+# tidy_aca_2018 %>%
+#   group_by(`FIPS County Code`, insured, age, num_children, `Metal Level`) %>%
+#   summarize(count = n()) %>%
+#   filter(`Metal Level` == "Silver", count > 2)
+
+premiums_for <- function(df, fips_code, metal_level, insured, age, num_children) {
+  df %>%
+    filter(`FIPS County Code` == !!fips_code,
+           `Metal Level` == !!metal_level,
+           `insured` == !!insured,
+           `age` == !!age,
+           `num_children` == !!num_children)
+}
+
+# premiums_for(tidy_aca_2018, 19153, "Silver", "Couple", 60, 0)
+# premiums_for(tidy_aca_2018, 19153, "Bronze", "Couple", 60, 0)
+# premiums_for(tidy_aca_2018, 19153, "Bronze", "Couple", 50, 2)
+
 federal_poverty_level <- Vectorize(function(year, state, family_size) {
   switch (as.character(year),
           `2016` = {
@@ -74,60 +128,6 @@ annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_
   subsidy
 }
 
-aca2018 <- read_csv(here("data", "QHP_PY2018_Medi-_Indi-_Land.csv"))
-
-premium_columns <- grepl("^Premium(?!.*Scenarios)|^Couple|^Individual", names(aca2018), perl = TRUE)
-premium_column_names <- names(aca2018)[premium_columns]
-
-tidy_aca_2018 <- aca2018 %>%
-  gather(type, premium, premium_column_names) %>%
-  select(`State Code`, `FIPS County Code`, `County Name`, `Metal Level`, premium, type) %>%
-  mutate(`State Code` = as_factor(`State Code`),
-         `FIPS County Code` = as_factor(`FIPS County Code`),
-         `County Name` = as_factor(`County Name`),
-         `Metal Level` = as_factor(`Metal Level`)) %>%
-  mutate(insured = case_when(str_detect(type, "Premium Child") ~ "Child",
-                             str_detect(type, "Premium Adult Individual|Individual\\+") ~ "Individual",
-                             str_detect(type, "Premium Couple|Couple\\+") ~ "Couple",
-                             TRUE ~ "NA"),
-         age = str_extract(type, "\\d+(-\\d+)?$"),
-         num_children = str_match(type, "(\\d+( or more)?) [Cc]hild(ren)?")[,2]) %>%
-  select(-type) %>%
-  mutate(num_children = ifelse(is.na(num_children), "0", num_children),
-         premium = as.numeric(gsub("\\$", "", premium))) %>%
-  mutate(insured = as_factor(insured),
-         age = as_factor(age),
-         num_children = as_factor(num_children)) %>%
-  distinct()
-
-second_lowest_silver_premiums <- tidy_aca_2018 %>%
-  filter(`Metal Level` == "Silver") %>%
-  select(`FIPS County Code`, insured, age, num_children, premium) %>%
-  group_by(`FIPS County Code`, insured, age, num_children) %>%
-  mutate(second_lowest_silver_premium = nth(premium, n = -2, order_by = -premium, default = min(premium))) %>%
-  select(-premium) %>%
-  distinct()
-
-tidy_aca_2018 <- inner_join(tidy_aca_2018, second_lowest_silver_premiums, by = c("FIPS County Code", "insured", "age", "num_children"))
-
-# tidy_aca_2018 %>%
-#   group_by(`FIPS County Code`, insured, age, num_children, `Metal Level`) %>%
-#   summarize(count = n()) %>%
-#   filter(`Metal Level` == "Silver", count > 2)
-
-premiums_for <- function(df, fips_code, metal_level, insured_, age_, num_children_) {
-  df %>%
-    filter(`FIPS County Code` == fips_code,
-           `Metal Level` == metal_level,
-           `insured` == insured_,
-           `age` == age_,
-           `num_children` == num_children_)
-}
-
-# premiums_for(tidy_aca_2018, 19153, "Silver", "Couple", 60, 0)
-# premiums_for(tidy_aca_2018, 19153, "Bronze", "Couple", 60, 0)
-# premiums_for(tidy_aca_2018, 19153, "Bronze", "Couple", 50, 2)
-
 calc_cliff <- function(metal_level, insured, age, num_children) {
   if (insured == "Couple") {
     family_size <- 2 + num_children
@@ -138,6 +138,7 @@ calc_cliff <- function(metal_level, insured, age, num_children) {
   tidy_aca_2018 %>%
     filter(`Metal Level` == !!metal_level, insured == !!insured, age == !!age, num_children == !!num_children) %>%
     group_by(`FIPS County Code`) %>%
+    # TODO: where should premium come from?
     filter(premium == min(premium)) %>%
     mutate(
       cliff = min(
@@ -169,7 +170,13 @@ c <- poc %>%
 #   summarize(n = n()) %>%
 #   filter(n > 1)
 
-county_choropleth(c, num_colors = 1) + scale_fill_continuous(low="#eff3ff", high="#084594", na.value="white")
+# We have to use the CountyChoropleth R6 object to get Alaska and Hawaii to render correctly
+# See https://stackoverflow.com/questions/38938565/alaska-and-hawaii-not-formatting-correctly-for-county-choropleth-map-in-r
+choro = CountyChoropleth$new(c)
+choro$ggplot_scale = scale_fill_brewer(name="Potential Subsidy Loss", palette = "YlOrRd", drop=FALSE)
+choro$render() + ggtitle("2018 ACA Subsidy Cliff", subtitle = "Potential subsidy loss when household income exceeds 400% of FPL") +
+  theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
+
 # end POC
 
 incomes <- seq(0, 100000, by = 100)
@@ -206,4 +213,3 @@ g <- g + geom_segment(aes(x = 0, y = cliff, xend = 4 * fpl, yend = cliff, color 
 g <- g + geom_text(aes(x = -1000, y = cliff, label = round(cliff), color = "red", hjust = "right"), show.legend = FALSE)
 g <- g + theme_minimal()
 g
-
