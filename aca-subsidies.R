@@ -196,10 +196,10 @@ cliff_chart <- function(fips_code, insured, age, num_children) {
   # TODO: don't hard code percentage
   cliff <- unlist(round(silver_premium * 12 - 0.0956 * 4 * fpl))
   cliff_df <- data_frame(x = -1000, cliff = cliff)
+  four_x_fpl_df <- data_frame(y = -1000, four_x_fpl = 4 * fpl)
 
   g <- ggplot(df, aes(x = income, y = subsidy))
   g <- g + geom_line()
-
   g <- g + geom_vline(data = fpl_df,
                       aes(xintercept = upper_percent * fpl),
                       linetype = 2)
@@ -209,14 +209,18 @@ cliff_chart <- function(fips_code, insured, age, num_children) {
                      data = fpl_df,
                      angle = 90, hjust = 1, vjust = -1)
   g <- g + geom_segment(aes(x = 0, y = cliff, xend = 4 * fpl, yend = cliff, color = "red"), show.legend = FALSE)
-
   g <- g + geom_text(aes(label = cliff,
                          x = x, y = cliff,
                          color = "red",
                          hjust = "right"),
                      data = cliff_df,
                      show.legend = FALSE)
-  g <- g + theme_minimal()
+  g <- g + geom_text(aes(label = 4 * fpl, x = four_x_fpl, y = y, color = "red"), show.legend = FALSE,
+                     data = four_x_fpl_df)
+  # TODO: Display state & county
+  g <- g + labs(title = "ACA Subsidy \"Cliff\"", subtitle = glue("{insured} age {age}, {num_children} children"))
+  g <- g + xlab("Household Income") + ylab("Annual Subsidy")
+  g <- g + theme_minimal() + theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
   return(g)
 }
 
