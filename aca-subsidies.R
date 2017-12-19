@@ -58,6 +58,7 @@ premiums_for <- function(df, fips_code, metal_level, insured, age, num_children)
 # premiums_for(tidy_aca_2018, 19153, "Bronze", "Couple", 60, 0)
 # premiums_for(tidy_aca_2018, 19153, "Bronze", "Couple", 50, 2)
 
+# TODO: add 2014 & 2015
 federal_poverty_level <- Vectorize(function(year, state, family_size) {
   switch (as.character(year),
           `2016` = {
