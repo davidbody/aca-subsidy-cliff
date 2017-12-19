@@ -2,6 +2,7 @@ library(tidyverse)
 library(forcats)
 library(choroplethr)
 library(here)
+library(glue)
 
 aca2018 <- read_csv(here("data", "QHP_PY2018_Medi-_Indi-_Land.csv"))
 
@@ -125,10 +126,15 @@ annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_
 
   subsidy <- silver_monthly_premium * 12 - (cap * annual_income / 100.0)
 
-  subsidy
+  # if (length(subsidy) != 1) {
+  #   print(subsidy)
+  # }
+  assertthat::assert_that(length(subsidy) == 1)
+
+  return(subsidy)
 }
 
-calc_cliff <- function(metal_level, insured, age, num_children) {
+calc_cliff <- function(insured, age, num_children) {
   if (insured == "Couple") {
     family_size <- 2 + num_children
   } else {
@@ -136,80 +142,84 @@ calc_cliff <- function(metal_level, insured, age, num_children) {
   }
 
   tidy_aca_2018 %>%
-    filter(`Metal Level` == !!metal_level, insured == !!insured, age == !!age, num_children == !!num_children) %>%
+    filter(insured == !!insured, age == !!age, num_children == !!num_children) %>%
+    select(`FIPS County Code`, `State Code`, insured, age, num_children, second_lowest_silver_premium) %>%
     group_by(`FIPS County Code`) %>%
-    # TODO: where should premium come from?
-    filter(premium == min(premium)) %>%
     mutate(
-      cliff = min(
-        max(
+      cliff = max(
           # TODO: don't hard code percentage
           second_lowest_silver_premium * 12 - 0.0956 * 4 * federal_poverty_level(2018, `State Code`, family_size),
-          0.0),
-        12 * premium)
-      )
+          0.0))
 }
 
-# Proof of concept for couple age 60, 0 children
-poc <- calc_cliff("Bronze", "Couple", 60, 0)
-summary(poc)
+cliff_map <- function(insured, age, num_children) {
+  cliff_df <- calc_cliff(insured, age, num_children) %>%
+    mutate(region = as.numeric(as.character(`FIPS County Code`)), value = cliff) %>%
+    distinct()
 
-poc[poc$cliff == max(poc$cliff), ]
-poc[poc$cliff == min(poc$cliff), ]
-
-g <- ggplot(poc, aes(x = cliff))
-g <- g + geom_histogram(binwidth = 1000)
-g
-
-c <- poc %>%
-  mutate(region = as.numeric(as.character(`FIPS County Code`)), value = cliff) %>%
-  distinct()
-
-# c %>%
-#   group_by(region) %>%
-#   summarize(n = n()) %>%
-#   filter(n > 1)
-
-# We have to use the CountyChoropleth R6 object to get Alaska and Hawaii to render correctly
-# See https://stackoverflow.com/questions/38938565/alaska-and-hawaii-not-formatting-correctly-for-county-choropleth-map-in-r
-choro = CountyChoropleth$new(c)
-choro$ggplot_scale = scale_fill_brewer(name="Potential Subsidy Loss", palette = "YlOrRd", drop=FALSE)
-choro$render() + ggtitle("2018 ACA Subsidy Cliff", subtitle = "Potential subsidy loss when household income exceeds 400% of FPL") +
-  theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
-
-# end POC
-
-incomes <- seq(0, 100000, by = 100)
-fpl <- federal_poverty_level(2018, "IA", 2)
-silver_premium <- premiums_for(tidy_aca_2018, 19153, "Silver", "Couple", 60, 0)$premium
-
-# TODO: don't hard code percentage
-cliff <- silver_premium * 12 - 0.0956 * 4 * fpl
-
-subsidy_fn <- function(income) {
-  annual_subsidy(income, fpl, silver_premium, "IA")
+  # We have to use the CountyChoropleth R6 object to get Alaska and Hawaii to render correctly
+  # See https://stackoverflow.com/questions/38938565/alaska-and-hawaii-not-formatting-correctly-for-county-choropleth-map-in-r
+  choro = CountyChoropleth$new(cliff_df)
+  choro$ggplot_scale = scale_fill_brewer(name="Potential Subsidy Loss", palette = "YlOrRd", drop=FALSE)
+  choro$render() + ggtitle("2018 ACA Subsidy Cliff", subtitle = glue("{insured} age {age}, {num_children} children")) +
+    theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
 }
 
-subsidies <- sapply(incomes, subsidy_fn)
+# cliff_map("Couple", 60, 0)
+# cliff_map("Individual", 21, 0)
+# cliff_map("Couple", 40, 2)
 
-df <- data_frame(income = incomes, subsidy = subsidies)
+fips_to_state <- function(fips_code) {
+  as.character(tidy_aca_2018[tidy_aca_2018$`FIPS County Code` == fips_code,]$`State Code`[1])
+}
 
-g <- ggplot(df, aes(x = income, y = subsidy))
-g <- g + geom_line()
-g <- g + geom_vline(xintercept = fpl, linetype = 2)
-g <- g + geom_text(label = "100%",
-                   x = fpl,
-                   y = 15000, angle = 90,
-                   hjust = 1, vjust = -1)
-g <- g + geom_vline(data = subsidy_table_2018,
-                    aes(xintercept = upper_percent * fpl),
-                    linetype = 2)
-g <- g + geom_text(data = subsidy_table_2018,
-                   aes(label = paste(upper_percent * 100, "%"),
-                       x = upper_percent * fpl,
-                       y = 15000),
-                   angle = 90, hjust = 1, vjust = -1)
-g <- g + geom_segment(aes(x = 0, y = cliff, xend = 4 * fpl, yend = cliff, color = "red"), show.legend = FALSE)
-g <- g + geom_text(aes(x = -1000, y = cliff, label = round(cliff), color = "red", hjust = "right"), show.legend = FALSE)
-g <- g + theme_minimal()
-g
+cliff_chart <- function(fips_code, insured, age, num_children) {
+  if (insured == "Couple") {
+    family_size <- 2 + num_children
+  } else {
+    family_size <- 1 + num_children
+  }
+
+  incomes <- seq(0, 100000, by = 100)
+  state <- fips_to_state(fips_code)
+  fpl <- federal_poverty_level(2018, state, family_size)
+  silver_premium <- tidy_aca_2018 %>%
+    filter(`FIPS County Code` == !!fips_code, insured == !!insured, age == !!age, num_children == !!num_children) %>%
+    select(second_lowest_silver_premium) %>%
+    distinct()
+
+  subsidies <- unlist(lapply(incomes, annual_subsidy, fpl, silver_premium, state))
+
+  df <- data_frame(income = incomes, subsidy = subsidies)
+
+  fpl_df <- rbind(data_frame(upper_percent = 1.0), select(subsidy_table_2018, upper_percent))
+  # TODO: don't hard code percentage
+  cliff <- unlist(round(silver_premium * 12 - 0.0956 * 4 * fpl))
+  cliff_df <- data_frame(x = -1000, cliff = cliff)
+
+  g <- ggplot(df, aes(x = income, y = subsidy))
+  g <- g + geom_line()
+
+  g <- g + geom_vline(data = fpl_df,
+                      aes(xintercept = upper_percent * fpl),
+                      linetype = 2)
+  g <- g + geom_text(aes(label = paste(upper_percent * 100, "%"),
+                         x = upper_percent * fpl,
+                         y = 15000),
+                     data = fpl_df,
+                     angle = 90, hjust = 1, vjust = -1)
+  g <- g + geom_segment(aes(x = 0, y = cliff, xend = 4 * fpl, yend = cliff, color = "red"), show.legend = FALSE)
+
+  g <- g + geom_text(aes(label = cliff,
+                         x = x, y = cliff,
+                         color = "red",
+                         hjust = "right"),
+                     data = cliff_df,
+                     show.legend = FALSE)
+  g <- g + theme_minimal()
+  return(g)
+}
+
+# cliff_chart(19153, "Couple", 60, 0)
+# cliff_chart(19153, "Individual", 21, 0)
+# cliff_chart(19153, "Couple", 50, 2)
