@@ -58,9 +58,21 @@ premiums_for <- function(df, fips_code, metal_level, insured, age, num_children)
 # premiums_for(tidy_aca_2018, 19153, "Bronze", "Couple", 60, 0)
 # premiums_for(tidy_aca_2018, 19153, "Bronze", "Couple", 50, 2)
 
-# TODO: add 2014 & 2015
+# https://aspe.hhs.gov/poverty-guidelines
 federal_poverty_level <- Vectorize(function(year, state, family_size) {
   switch (as.character(year),
+          `2014` = {
+            switch(as.character(state),
+                   "AK" = 14580 + 5080 * (family_size - 1),
+                   "HI" = 13420 + 4670 * (family_size - 1),
+                   11670 + 4060 * (family_size - 1))
+          },
+          `2015` = {
+            switch(as.character(state),
+                   "AK" = 14720 + 5200 * (family_size - 1),
+                   "HI" = 13550 + 4780 * (family_size - 1),
+                   11770 + 4160 * (family_size - 1))
+          },
           `2016` = {
             switch(as.character(state),
                    "AK" = 14720 + 5200 * (family_size - 1),
