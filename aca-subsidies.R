@@ -99,6 +99,49 @@ expanded_medicaid <- function(state) {
   !(state %in% c("AL", "FL", "GA", "ID", "KS", "ME", "MS", "MO", "NE", "NC", "OK", "SC", "SD", "TN", "TX", "UT", "VA", "WI", "WY"))
 }
 
+subsidy_table <-
+  rbind(
+    data_frame(
+      # IRC §36B(b)(3)(A)(i)
+      year = c(2014, 2014, 2014, 2014, 2014, 2014),
+      lower_percent = c(0.0, 1.33, 1.5, 2.0, 2.5, 3.0),
+      upper_percent = c(1.33, 1.5, 2.0, 2.5, 3.0, 4.0),
+      lower_cap = c(2.0, 3.0, 4.0, 6.3, 8.05, 9.5),
+      upper_cap = c(2.0, 4.0, 6.3, 8.05, 9.5, 9.5)),
+
+    data_frame(
+      # Rev. Proc. 2014-37
+      year = c(2015, 2015, 2015, 2015, 2015, 2015),
+      lower_percent = c(0.0, 1.33, 1.5, 2.0, 2.5, 3.0),
+      upper_percent = c(1.33, 1.5, 2.0, 2.5, 3.0, 4.0),
+      lower_cap = c(2.01, 3.02, 4.02, 6.34, 8.10, 9.56),
+      upper_cap = c(2.01, 4.02, 6.34, 8.10, 9.56, 9.56)),
+
+    data_frame(
+      # Rev. Proc. 2014-62
+      year = c(2016, 2016, 2016, 2016, 2016, 2016),
+      lower_percent = c(0.0, 1.33, 1.5, 2.0, 2.5, 3.0),
+      upper_percent = c(1.33, 1.5, 2.0, 2.5, 3.0, 4.0),
+      lower_cap = c(2.03, 3.05, 4.07, 6.41, 8.18, 9.66),
+      upper_cap = c(2.03, 4.07, 6.41, 8.18, 9.66, 9.66)),
+
+    data_frame(
+      # Rev. Proc. 2016-24
+      year = c(2017, 2017, 2017, 2017, 2017, 2017),
+      lower_percent = c(0.0, 1.33, 1.5, 2.0, 2.5, 3.0),
+      upper_percent = c(1.33, 1.5, 2.0, 2.5, 3.0, 4.0),
+      lower_cap = c(2.04, 3.06, 4.08, 6.43, 8.21, 9.69),
+      upper_cap = c(2.04, 4.08, 6.43, 8.21, 9.69, 9.69)),
+
+    data_frame(
+      # Rev. Proc. 2017-36
+      year = c(2018, 2018, 2018, 2018, 2018, 2018),
+      lower_percent = c(0.0, 1.33, 1.5, 2.0, 2.5, 3.0),
+      upper_percent = c(1.33, 1.5, 2.0, 2.5, 3.0, 4.0),
+      lower_cap = c(2.01, 3.02, 4.03, 6.34, 8.10, 9.56),
+      upper_cap = c(2.01, 4.03, 6.34, 8.10, 9.5, 9.56)
+    ))
+
 # Rev. Proc. 2017-36
 subsidy_table_2018 <-
   data_frame(lower_percent = c(0.0, 1.33, 1.5, 2.0, 2.5, 3.0),
