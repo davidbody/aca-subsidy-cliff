@@ -3,6 +3,7 @@ library(forcats)
 library(choroplethr)
 library(here)
 library(glue)
+library(assertthat)
 
 aca2018 <- read_csv(here("data", "QHP_PY2018_Medi-_Indi-_Land.csv"))
 
@@ -142,7 +143,7 @@ annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_
   # if (length(subsidy) != 1) {
   #   print(subsidy)
   # }
-  assertthat::assert_that(length(subsidy) == 1)
+  assert_that(length(subsidy) == 1)
 
   return(subsidy)
 }
