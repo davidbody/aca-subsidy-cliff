@@ -239,6 +239,7 @@ cliff_chart <- function(fips_code, insured, age, num_children) {
     family_size <- 1 + num_children
   }
 
+  # TODO: calculate upper income bound based on cliff
   incomes <- seq(0, 100000, by = 100)
   state_and_county <- fips_to_state_and_county(fips_code)
   state = state_and_county$state
