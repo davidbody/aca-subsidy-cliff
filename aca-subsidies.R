@@ -183,8 +183,10 @@ cliff_map <- function(insured, age, num_children) {
 # cliff_map("Individual", 21, 0)
 # cliff_map("Couple", 40, 2)
 
-fips_to_state <- function(fips_code) {
-  as.character(tidy_aca_2018[tidy_aca_2018$`FIPS County Code` == fips_code,]$`State Code`[1])
+fips_to_state_and_county <- function(fips_code) {
+  fips_row = tidy_aca_2018[tidy_aca_2018$`FIPS County Code` == fips_code,]
+  list(state = as.character(fips_row$`State Code`[1]),
+       county = as.character(fips_row$`County Name`[1]))
 }
 
 cliff_chart <- function(fips_code, insured, age, num_children) {
@@ -195,7 +197,9 @@ cliff_chart <- function(fips_code, insured, age, num_children) {
   }
 
   incomes <- seq(0, 100000, by = 100)
-  state <- fips_to_state(fips_code)
+  state_and_county <- fips_to_state_and_county(fips_code)
+  state = state_and_county$state
+  county = state_and_county$county
   fpl <- federal_poverty_level(2018, state, family_size)
   silver_premium <- tidy_aca_2018 %>%
     filter(`FIPS County Code` == !!fips_code, insured == !!insured, age == !!age, num_children == !!num_children) %>%
@@ -231,8 +235,7 @@ cliff_chart <- function(fips_code, insured, age, num_children) {
                      show.legend = FALSE)
   g <- g + geom_text(aes(label = 4 * fpl, x = four_x_fpl, y = y, color = "red"), show.legend = FALSE,
                      data = four_x_fpl_df)
-  # TODO: Display state & county
-  g <- g + labs(title = "ACA Subsidy \"Cliff\"", subtitle = glue("{insured} age {age}, {num_children} children"))
+  g <- g + labs(title = "2018 ACA Subsidy \"Cliff\"", subtitle = glue("{county} County, {state}, {insured} age {age}, {num_children} children"))
   g <- g + xlab("Household Income") + ylab("Annual Subsidy")
   g <- g + theme_minimal() + theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
   return(g)
