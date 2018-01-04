@@ -219,7 +219,7 @@ cliff_map <- function(insured, age, num_children) {
   # We have to use the CountyChoropleth R6 object to get Alaska and Hawaii to render correctly
   # See https://stackoverflow.com/questions/38938565/alaska-and-hawaii-not-formatting-correctly-for-county-choropleth-map-in-r
   choro = CountyChoropleth$new(cliff_df)
-  choro$ggplot_scale = scale_fill_brewer(name="Potential Subsidy Loss", palette = "YlOrRd", drop=FALSE)
+  choro$ggplot_scale = scale_fill_brewer(name="Potential Subsidy Loss", palette = "Blues", drop=FALSE)
   choro$render() + ggtitle("2018 ACA Subsidy Cliff", subtitle = glue("{insured} age {age}, {num_children} children")) +
     theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
 }
