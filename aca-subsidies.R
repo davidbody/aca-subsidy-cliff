@@ -290,3 +290,24 @@ cliff_chart <- function(fips_code, insured, age, num_children) {
 # cliff_chart(19153, "Couple", 60, 0)
 # cliff_chart(19153, "Individual", 21, 0)
 # cliff_chart(19153, "Couple", 50, 2)
+
+print(aca2018 %>%
+        group_by(`State Code`) %>%
+        summarize(n_issuers = n_distinct(`Issuer Name`)) %>%
+        arrange(n_issuers)
+      , n=50)
+
+
+states_with_one_issuer <- aca2018 %>%
+  group_by(`State Code`) %>%
+  mutate(n_issuers = n_distinct(`Issuer Name`)) %>%
+  filter(n_issuers == 1) %>%
+  select(`State Code`, `Issuer Name`) %>%
+  distinct()
+
+counties_with_one_issuer <- aca2018 %>%
+  group_by(`FIPS County Code`) %>%
+  mutate(n_issuers = n_distinct(`Issuer Name`)) %>%
+  filter(n_issuers == 1) %>%
+  select('FIPS County Code', `State Code`, `County Name`, `Issuer Name`) %>%
+  distinct()
