@@ -96,6 +96,8 @@ federal_poverty_level <- Vectorize(function(year, state, family_size) {
 })
 
 expanded_medicaid <- function(state) {
+  # List of states not expanding Medicaid from tables at the end of
+  # https://www.kff.org/uninsured/issue-brief/the-coverage-gap-uninsured-poor-adults-in-states-that-do-not-expand-medicaid/
   !(state %in% c("AL", "FL", "GA", "ID", "KS", "ME", "MS", "MO", "NE", "NC", "OK", "SC", "SD", "TN", "TX", "UT", "VA", "WI", "WY"))
 }
 
