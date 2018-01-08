@@ -1,0 +1,99 @@
+---
+title: "ACA Subsidies Cliff"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, error=FALSE, cache=TRUE}
+source("aca-subsidies.R")
+```
+
+*This draft is a work in progress and will be updated from time to time.*
+
+### Main features of the ACA
+
+The [Affordable Care Act (ACA)](https://en.wikipedia.org/wiki/Patient_Protection_and_Affordable_Care_Act) was enacted in 2010 and major provisions went into effect in 2014. The goal, to expand health insurance coverage in the United States, was accomplished in two primary ways.
+
+First, Medicaid eligibility was expanded to all U.S. citizens and legal residents with incomes up to 133% of the federal poverty level. [As of October 2017](https://www.kff.org/uninsured/issue-brief/the-coverage-gap-uninsured-poor-adults-in-states-that-do-not-expand-medicaid/), 32 states (including DC) had expanded Medicaid and 19 had not.
+
+Second, significant changes were made to individual health insurance markets.
+
+* Insurers were required to use community rating, meaning they could no longer deny coverage or charge higher premiums based on pre-existing conditions or sex.
+* To avoid adverse selection, almost everyone is required to have health insurance that provides certain essential health benefits. Those who do not have employer-provided insurance or Medicaid are required to buy health insurance or pay a penalty. (This "individual mandate" has been repealed starting in 2019.)
+* Finally, subsidies are provided to help people afford such coverage.
+
+This paper is about a particular feature of those subsidies that may create a substantial disincentive to work for certain individuals.
+
+### Two kinds of subsidies
+
+It should be noted that there are two kinds of subsidies under the ACA.
+
+#### Premium tax credits
+
+The larger of the two kinds of subsidies is used to help people pay premiums of policies purchased on health insurance exchanges set up under the ACA. These subsidies are provided in the form of "[premium tax credits](https://www.irs.gov/affordable-care-act/individuals-and-families/the-premium-tax-credit-the-basics-0)" and are avaiable to ACA enrollees earning up to 400% of the federal poverty level (FPL). Premium tax credits are calculated based on an enrollee's expected income and paid in advance directly to insurance companies. When the enrollee files her income tax return the following year, premium tax credit is reconciled based on actual income and income tax liability or refund is adjusted accordingly.
+
+#### Cost sharing reductions
+
+[Cost sharing reductions (CSR)](https://en.wikipedia.org/wiki/Cost_sharing_reductions_subsidy) subsidies are provided to reduce the copayments and deductibles for ACA enrollees with incomes under 250% of the FPL. Until 2018, these subsidies were paid to insurance companies to compensate for the costs of reducing copayments and deductibles for eligible ACA enrollees. [Starting in 2018](https://www.nytimes.com/2017/10/12/us/politics/trump-obamacare-executive-order-health-insurance.html), insurance companies will no longer receive the CSR subsidies, but will still be required to reduce copayments and deductibles. Insurance companies therefore increased premiums for everyone in order to compensate for the loss of the CSR subsidies.
+
+As we'll see below, these premium increases and the resulting increase in premium tax credits creates perverse effects for certain individuals.
+
+### How is the premium tax credit calculated?
+
+The larger of the two subsidies is the premium tax credit which is available to people whose income is up to 400% of the FPL. This subsidy is designed to make health insurance cost no more than a certain percentage of a household's income. The subsidy is calculated as follows:
+
+* First determine a **reference premium** which is the second lowest Silver premium available to the insured.
+* Second determine the **applicable percentage** from the table below.
+* Third calculate a **maximum available subsidy** as the excess of the reference premium over that percentage of the insured's income.
+* Finally, the **actual subsidy** is the lesser of the premium on the policy selected by the insured and the maximum available subsidy.
+
+For 2018, the applicable percentage is determined from the following table, based on household income:
+
+```{r, echo=FALSE, message=FALSE}
+library(dplyr)
+library(glue)
+library(knitr)
+subsidy_table %>%
+  filter(year == 2018) %>%
+  mutate(`Household income percentage of FPL` = glue('At least {100 * lower_percent}% but less than {100 * upper_percent}%'),
+         `Initial percentage` = glue('{format(lower_cap, nsmall=2)}%'),
+         `Final percentage` = glue('{format(upper_cap, nsmall=2)}%')) %>%
+  select(-year, -lower_percent, -upper_percent, -lower_cap, -upper_cap) %>%
+  kable
+```
+
+Here is a concrete example of how the premium tax credit is calculated.
+
+```{r, echo=FALSE}
+library(assertthat)
+example_fpl <- federal_poverty_level(2018, "IA", 3)
+example_income <- 2.25 * example_fpl
+example_applicable_percentage <- (6.34 + 8.1)/2
+example_reference_premium <- 1557.9
+example_maximum_subsidy <- annual_subsidy(example_income, example_fpl, example_reference_premium, "IA")
+example_gold_premium <- 1732.65
+example_bronze_premium <- 1263.79
+```
+
+Assume a married couple both age 30 with one child and a household income of $`r format(example_income, big.mark=",")` living in Polk County, Iowa. The 2018 FPL for an Iowa household with 3 people is $`r format(example_fpl, big.mark=",")`. Their income is therefore 225% of the FPL, which means the applicable percentage will be half-way between 6.34% and 8.10%, or `r example_applicable_percentage`%. The reference premium is the second lowest Silver premium available. For this couple  in 2018, only one Silver plan is available, so the reference premium is the premium for that plan, which is $`r format(example_reference_premium, big.mark=",", nsmall=2)` per month, or $`r format(example_reference_premium * 12, big.mark=",", nsmall=2)` per year. The maximum available subisdy will be the amount by which the reference premium exceeds `r example_applicable_percentage`% of their income, or $`r format(example_reference_premium * 12, big.mark=",", nsmall=2)` - `r example_applicable_percentage / 100` * $`r format(example_income, big.mark=",")`, which equals $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)`.
+
+If this family purchases a Gold policy for $`r format(example_gold_premium * 12, big.mark=",")` per year, their subsidy will be the full $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)`. If, instead they purchase a Bronze policy for $`r format(example_bronze_premium * 12, big.mark=",")` per year, their subsidy will be limited to the cost of the Bronze policy because it is less than the maximum available subsidy.
+
+<br/>
+
+Draft January 8, 2018
+
+Data sources:
+
+* 
+* 
+* 
+
+Source code: [https://github.com/davidbody/aca-subsidies](https://github.com/davidbody/aca-subsidies)
+
+Author: [David W. Body](https://twitter.com/david_body)
+
+---
