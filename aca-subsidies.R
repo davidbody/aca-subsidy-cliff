@@ -219,7 +219,7 @@ cliff_map <- function(insured, age, num_children) {
   # We have to use the CountyChoropleth R6 object to get Alaska and Hawaii to render correctly
   # See https://stackoverflow.com/questions/38938565/alaska-and-hawaii-not-formatting-correctly-for-county-choropleth-map-in-r
   choro = CountyChoropleth$new(cliff_df)
-  choro$ggplot_scale = scale_fill_brewer(name="Potential Subsidy Loss", palette = "Blues", drop=FALSE)
+  choro$ggplot_scale = scale_fill_brewer(name="Subsidy loss at 400% FPL", palette = "Blues", drop=FALSE)
   choro$render() + ggtitle("2018 ACA Subsidy Cliff", subtitle = glue("{insured} age {age}, {num_children} children")) +
     theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
 }
@@ -242,7 +242,7 @@ cliff_chart <- function(fips_code, insured, age, num_children) {
   }
 
   # TODO: calculate upper income bound based on cliff
-  incomes <- seq(0, 100000, by = 100)
+  incomes <- seq(0, 125000, by = 100)
   state_and_county <- fips_to_state_and_county(fips_code)
   state = state_and_county$state
   county = state_and_county$county
