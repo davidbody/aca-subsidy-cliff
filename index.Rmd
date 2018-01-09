@@ -82,15 +82,47 @@ Assume a married couple both age 30 with one child and a household income of $`r
 
 If this family purchases a Gold policy for $`r format(example_gold_premium * 12, big.mark=",")` per year, their subsidy will be the full $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)`. If, instead they purchase a Bronze policy for $`r format(example_bronze_premium * 12, big.mark=",")` per year, their subsidy will be limited to the cost of the Bronze policy because it is less than the maximum available subsidy.
 
+As household income gets closer to 400% of the FPL, the maximum available subsidy is reduced both by the fact that the applicable percentage applies to a higher income, and by the fact that the applicable percentage gradually rises to 9.56%.
+
+It is critical to note that subsidies are only available to people whose income does not exceed 400% of the FPL. **Once household income goes above 400% of FPL, the maximum available subsidy drops to zero.**
+
+The following chart shows the maximum available subsidy as a function of household income for the household in this example.
+
+```{r, echo=FALSE, message=FALSE}
+library(ggplot2)
+library(choroplethr)
+cliff_chart(19153, "Couple", 30, 1)
+```
+
+As shown in the chart, there is a subsidy "cliff" at 400% of FPL, or `r format(example_fpl * 4, big.mark=",")`. In this example, the size of the cliff is `r format(round(example_reference_premium * 12 - 0.0956 * 4 * example_fpl), big.mark=",")`. So, for example, if this family receives an advanced premium tax credit based on an estimated income of less than `r format(example_fpl * 4, big.mark=",")`, but their actual income for 2018 is even one dollar over this amount, they will be liable to repay the entire amount of their subsidy when they file their 2018 federal income tax return in 2019.
+
+In a given year, the size of the cliff is a function of the FPL (which varies with household size) and the second highest Silver premium available (which varies by location, household size, and age).
+
+Here is the same chart for a couple age 60 in Polk County, Iowa.
+
+```{r, echo=FALSE, message=FALSE}
+cliff_chart(19153, "Couple", 60, 0)
+```
+
+This situation is by no means unique to Polk County, Iowa. Let's calculate the size of the "cliff" for similar households in every county in the US. (Only states that use the federal exchange are included. States that operate their own exchanges are marked as NA.)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cliff_map("Couple", 30, 1)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cliff_map("Couple", 60, 0)
+```
+
 <br/>
 
-Draft January 8, 2018
+Draft January 9, 2018
 
 Data sources:
 
-* 
-* 
-* 
+* Health insurance plans and premiums from [HealthCare.gov](https://www.healthcare.gov/health-and-dental-plan-datasets-for-researchers-and-issuers/).
+* Federal Poverty Levels from [U.S. Department of Health and Human Services](https://aspe.hhs.gov/poverty-guidelines).
+* Applicable Percentage tables from [Internal Revenue Service](https://www.irs.gov/). PDFs of the Revenue Procedures are included in the source code repository.
 
 Source code: [https://github.com/davidbody/aca-subsidies](https://github.com/davidbody/aca-subsidies)
 
