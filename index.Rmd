@@ -33,7 +33,7 @@ It should be noted that there are two kinds of subsidies under the ACA.
 
 #### Premium tax credits
 
-The larger of the two kinds of subsidies is used to help people pay premiums of policies purchased on health insurance exchanges set up under the ACA. These subsidies are provided in the form of "[premium tax credits](https://www.irs.gov/affordable-care-act/individuals-and-families/the-premium-tax-credit-the-basics-0)" and are available to ACA enrollees earning up to 400% of the federal poverty level (FPL). Premium tax credits are calculated based on an enrollee's expected income and paid in advance directly to insurance companies. When the enrollee files her income tax return the following year, premium tax credit is reconciled based on actual income and income tax liability or refund is adjusted accordingly.
+The larger of the two kinds of subsidies is used to help people pay premiums of policies purchased on health insurance exchanges set up under the ACA. These subsidies are provided in the form of "[premium tax credits](https://www.irs.gov/affordable-care-act/individuals-and-families/the-premium-tax-credit-the-basics-0)" and are available to ACA enrollees earning up to 400% of the federal poverty level (FPL). Premium tax credits are calculated based on an enrollee's expected income and can be paid in advance directly to insurance companies. When the enrollee files her income tax return the following year, premium tax credit is reconciled based on actual income and income tax liability or refund is adjusted accordingly.
 
 #### Cost sharing reductions
 
@@ -69,18 +69,20 @@ Here is a concrete example of how the premium tax credit is calculated.
 
 ```{r, echo=FALSE}
 library(assertthat)
-example_fpl <- federal_poverty_level(2018, "IA", 3)
+example_fpl <- federal_poverty_level(2018, "IA", 4)
 example_income <- 2.25 * example_fpl
 example_applicable_percentage <- (6.34 + 8.1)/2
-example_reference_premium <- 1557.9
+example_reference_premium <- 1950.58
 example_maximum_subsidy <- annual_subsidy(example_income, example_fpl, example_reference_premium, "IA")
-example_gold_premium <- 1732.65
-example_bronze_premium <- 1263.79
+example_gold_premium <- 2169.38
+example_bronze_premium <- 1582.34
 ```
 
-Assume a married couple both age 30 with one child and a household income of $`r format(example_income, big.mark=",")` living in Polk County, Iowa. The 2018 FPL for an Iowa household with 3 people is $`r format(example_fpl, big.mark=",")`. Their income is therefore 225% of the FPL, which means the applicable percentage will be half-way between 6.34% and 8.10%, or `r example_applicable_percentage`%. The reference premium is the second lowest Silver premium available. For this couple  in 2018, only one Silver plan is available, so the reference premium is the premium for that plan, which is $`r format(example_reference_premium, big.mark=",", nsmall=2)` per month, or $`r format(example_reference_premium * 12, big.mark=",", nsmall=2)` per year. The maximum available subsidy will be the amount by which the reference premium exceeds `r example_applicable_percentage`% of their income, or $`r format(example_reference_premium * 12, big.mark=",", nsmall=2)` - `r example_applicable_percentage / 100` * $`r format(example_income, big.mark=",")`, which equals $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)`.
+Assume a married couple both age 30 with two children and a household income of $`r format(example_income, big.mark=",")` living in Polk County, Iowa. The 2018 FPL for an Iowa household with 4 people is $`r format(example_fpl, big.mark=",")`. Their income is therefore 225% of the FPL, which means the applicable percentage will be half-way between 6.34% and 8.10%, or `r example_applicable_percentage`%. The reference premium is the second lowest Silver premium available. For this couple  in 2018, only one Silver plan is available, so the reference premium is the premium for that plan, which is $`r format(example_reference_premium, big.mark=",", nsmall=2)` per month, or $`r format(example_reference_premium * 12, big.mark=",", nsmall=2)` per year. The maximum available subsidy will be the amount by which the reference premium exceeds `r example_applicable_percentage`% of their income, or $`r format(example_reference_premium * 12, big.mark=",", nsmall=2)` - `r example_applicable_percentage / 100` * $`r format(example_income, big.mark=",")`, which equals $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)`.
 
 If this family purchases a Gold policy for $`r format(example_gold_premium * 12, big.mark=",")` per year, their subsidy will be the full $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)`. If, instead they purchase a Bronze policy for $`r format(example_bronze_premium * 12, big.mark=",")` per year, their subsidy will be limited to the cost of the Bronze policy because it is less than the maximum available subsidy.
+
+### Available subsidy decreases as income rises
 
 As household income gets closer to 400% of the FPL, the maximum available subsidy is reduced both by the fact that the applicable percentage applies to a higher income, and by the fact that the applicable percentage gradually rises to 9.56%.
 
@@ -91,12 +93,12 @@ The following chart shows the maximum available subsidy as a function of househo
 ```{r, echo=FALSE, message=FALSE}
 library(ggplot2)
 library(choroplethr)
-cliff_chart(19153, "Couple", 30, 1)
+cliff_chart(19153, "Couple", 30, 2)
 ```
 
 As shown in the chart, there is a subsidy "cliff" at 400% of FPL, or `r format(example_fpl * 4, big.mark=",")`. In this example, the size of the cliff is `r format(round(example_reference_premium * 12 - 0.0956 * 4 * example_fpl), big.mark=",")`. So, for example, if this family receives an advanced premium tax credit based on an estimated income of less than `r format(example_fpl * 4, big.mark=",")`, but their actual income for 2018 is even one dollar over this amount, they will be liable to repay the entire amount of their subsidy when they file their 2018 federal income tax return in 2019.
 
-In a given year, the size of the cliff is a function of the FPL (which varies with household size) and the second highest Silver premium available (which varies by location, household size, and age).
+In a given year, the size of the cliff is mainly a function of the second highest Silver premium available, which varies by location, household size, and age. Health insurance premiums generally increase with the age of the insureds, so older people tend to face higher subsidy cliffs.
 
 Here is the same chart for a couple age 60 in Polk County, Iowa.
 
@@ -104,10 +106,10 @@ Here is the same chart for a couple age 60 in Polk County, Iowa.
 cliff_chart(19153, "Couple", 60, 0)
 ```
 
-This situation is by no means unique to Polk County, Iowa. Let's calculate the size of the "cliff" for similar households in every county in the US. (Only states that use the federal exchange are included. States that operate their own exchanges are marked as NA.)
+Since health insurance premiums also vary by location, so does the size of the cliff. Let's calculate the size of the "cliff" for similar households in every county in the US. (Only states that use the federal health insurance exchange are included. States that operate their own exchanges are marked as NA.)
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-cliff_map("Couple", 30, 1)
+cliff_map("Couple", 30, 2)
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
