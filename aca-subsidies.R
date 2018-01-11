@@ -151,9 +151,7 @@ subsidy_table_2018 <-
              lower_cap = c(2.01, 3.02, 4.03, 6.34, 8.10, 9.56),
              upper_cap = c(2.01, 4.03, 6.34, 8.10, 9.5, 9.56))
 
-annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_premium, state) {
-  income_percent_of_fpl <- (annual_income / federal_poverty_level)
-
+applicable_percent <- Vectorize(function(income_percent_of_fpl, state) {
   # https://www.kff.org/health-reform/issue-brief/explaining-health-care-reform-questions-about-health/
   if (expanded_medicaid(state)) {
     if (income_percent_of_fpl < 1.38) {
@@ -183,7 +181,17 @@ annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_
     cap <- lower_cap
   }
 
-  subsidy <- silver_monthly_premium * 12 - (cap * annual_income / 100.0)
+  return(cap)
+})
+
+annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_premium, state) {
+  income_percent_of_fpl <- (annual_income / federal_poverty_level)
+  apr <- applicable_percent(income_percent_of_fpl, state)
+  if (apr == 0) {
+    subsidy <- 0
+  } else {
+    subsidy <- silver_monthly_premium * 12 - (apr * annual_income / 100.0)
+  }
 
   # if (length(subsidy) != 1) {
   #   print(subsidy)
