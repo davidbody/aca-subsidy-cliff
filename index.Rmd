@@ -118,7 +118,7 @@ cliff_map("Couple", 60, 0)
 
 <br/>
 
-Draft January 9, 2018
+Draft `r format(file.mtime("index.Rmd"), "%B %e, %Y")`
 
 Data sources:
 
