@@ -65,6 +65,22 @@ subsidy_table %>%
   kable
 ```
 
+Subsidies are available to people who purchase health insurance on an exchange and whose household income is between 100% and 400% of the FPL. For people in states that have expanded Medicaid under the ACA, subsidies are available for incomes between 138% and 400% of FPL (because almost everyone with incomes below 138% of FPL qualify for Medicaid and therefore are not eligible to buy insurance on an exchange).
+
+The subsidy percentages look like this:
+
+```{r, echo=FALSE, message=FALSE, fig.height=3, fig.width=6}
+library(ggplot2)
+library(gridExtra)
+grid.arrange(apr_chart("IA") + labs(title = "Medicaid Exapnsion State"), apr_chart("TX") + labs(title = "Non-Medicaid Expansion State"), nrow = 1)
+```
+
+The maximum available subsidy will be the excess of the reference premium over the applicable percentage of a household's income.
+
+Note that subsidies are not available to households with incomes below 100% (138% for Medicaid expansion states) or above 400% of the FPL.
+
+### Example
+
 Here is a concrete example of how the premium tax credit is calculated.
 
 ```{r, echo=FALSE}
