@@ -4,6 +4,7 @@ library(choroplethr)
 library(here)
 library(glue)
 library(assertthat)
+library(gridExtra)
 
 aca2018 <- read_csv(here("data", "QHP_PY2018_Medi-_Indi-_Land.csv"))
 
@@ -183,6 +184,20 @@ applicable_percent <- Vectorize(function(income_percent_of_fpl, state) {
 
   return(cap)
 })
+
+apr_chart <- function(state) {
+  fpl_percent <- seq(0, 4.5, by = 0.01)
+  apr <- applicable_percent(fpl_percent, state)
+  df <- data_frame(fpl_percent = fpl_percent, apr = apr)
+  ggplot(df, aes(x = fpl_percent, y = apr)) +
+    geom_line() +
+    scale_x_continuous(labels = scales::percent_format()) +
+    xlab("Percent of FPL") +
+    ylab("Applicable Percentage") +
+    theme_minimal()
+}
+
+# grid.arrange(apr_chart("TX") + labs(title = "Non-Medicaid Expansion State"), apr_chart("IA") + labs(title = "Medicaid Exapnsion State"), nrow = 1)
 
 annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_premium, state) {
   income_percent_of_fpl <- (annual_income / federal_poverty_level)
