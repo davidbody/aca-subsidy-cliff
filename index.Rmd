@@ -69,10 +69,12 @@ Subsidies are available to people who purchase health insurance on an exchange a
 
 The subsidy percentages look like this:
 
-```{r, echo=FALSE, message=FALSE, fig.height=3, fig.width=6}
+```{r, echo=FALSE, message=FALSE, fig.height=3, fig.width=10}
 library(ggplot2)
 library(gridExtra)
-grid.arrange(apr_chart("IA") + labs(title = "Medicaid Exapnsion State"), apr_chart("TX") + labs(title = "Non-Medicaid Expansion State"), nrow = 1)
+grid.arrange(apr_chart("IA") + labs(title = "Medicaid Exapnsion State") + theme(aspect.ratio = 1/3),
+             apr_chart("TX") + labs(title = "Non-Medicaid Expansion State") + theme(aspect.ratio = 1/3),
+             nrow = 1)
 ```
 
 The maximum available subsidy will be the excess of the reference premium over the applicable percentage of a household's income.
