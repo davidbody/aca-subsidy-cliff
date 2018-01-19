@@ -56,9 +56,17 @@ For 2018, the applicable percentage is determined from the following table, base
 library(dplyr)
 library(glue)
 library(knitr)
+label_text <- Vectorize(function(lower_percent, upper_percent) {
+  if (lower_percent == 0) {
+    return(glue("Less than {100 * upper_percent}%"))
+  } else {
+    return(glue('At least {100 * lower_percent}% but less than {100 * upper_percent}%'))
+  }
+})
+
 subsidy_table %>%
   filter(year == 2018) %>%
-  mutate(`Household income percentage of FPL` = glue('At least {100 * lower_percent}% but less than {100 * upper_percent}%'),
+  mutate(`Household income percentage of FPL` = label_text(lower_percent, upper_percent),
          `Initial percentage` = glue('{format(lower_cap, nsmall=2)}%'),
          `Final percentage` = glue('{format(upper_cap, nsmall=2)}%')) %>%
   select(-year, -lower_percent, -upper_percent, -lower_cap, -upper_cap) %>%
@@ -96,15 +104,15 @@ example_gold_premium <- 2169.38
 example_bronze_premium <- 1582.34
 ```
 
-Assume a married couple both age 30 with two children and a household income of $`r format(example_income, big.mark=",")` living in Polk County, Iowa. The 2018 FPL for an Iowa household with 4 people is $`r format(example_fpl, big.mark=",")`. Their income is therefore 225% of the FPL, which means the applicable percentage will be half-way between 6.34% and 8.10%, or `r example_applicable_percentage`%. The reference premium is the second lowest Silver premium available. For this couple  in 2018, only one Silver plan is available, so the reference premium is the premium for that plan, which is $`r format(example_reference_premium, big.mark=",", nsmall=2)` per month, or $`r format(example_reference_premium * 12, big.mark=",", nsmall=2)` per year. The maximum available subsidy will be the amount by which the reference premium exceeds `r example_applicable_percentage`% of their income, or $`r format(example_reference_premium * 12, big.mark=",", nsmall=2)` - `r example_applicable_percentage / 100` * $`r format(example_income, big.mark=",")`, which equals $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)`.
+Assume a married couple both age 30 with two children and a household income of $`r format(example_income, big.mark=",")` living in Polk County, Iowa. The 2018 FPL for an Iowa household with 4 people is $`r format(example_fpl, big.mark=",")`. Their income is therefore 225% of the FPL, which means the applicable percentage will be half-way between 6.34% and 8.10%, or `r example_applicable_percentage`%. The reference premium is the second lowest Silver premium available. For this couple  in 2018, only one Silver plan is available, so the reference premium is the premium for that plan, which is $`r format(example_reference_premium, big.mark=",", nsmall=2)` per month, or $`r format(example_reference_premium * 12, big.mark=",", nsmall=2)` per year. The maximum available subsidy will be the amount by which the reference premium exceeds `r example_applicable_percentage`% of their income, or $`r format(example_reference_premium * 12, big.mark=",", nsmall=2)` - `r example_applicable_percentage / 100` x $`r format(example_income, big.mark=",")`, which equals $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)`.
 
-If this family purchases a Gold policy for $`r format(example_gold_premium * 12, big.mark=",")` per year, their subsidy will be the full $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)`. If, instead they purchase a Bronze policy for $`r format(example_bronze_premium * 12, big.mark=",")` per year, their subsidy will be limited to the cost of the Bronze policy because it is less than the maximum available subsidy.
+If this family purchases a Gold policy for $`r format(example_gold_premium * 12, big.mark=",")` per year, or a Silver policy for $`r format(example_reference_premium * 12, big.mark=",")` per year, their subsidy will be the full $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)`. If, instead they purchase a Bronze policy for $`r format(example_bronze_premium * 12, big.mark=",")` per year, their subsidy will be limited to the cost of the Bronze policy because it is less than the maximum available subsidy.
 
 ### Available subsidy decreases as income rises
 
-As household income gets closer to 400% of the FPL, the maximum available subsidy is reduced both by the fact that the applicable percentage applies to a higher income, and by the fact that the applicable percentage gradually rises to 9.56%.
+As household income gets closer to 400% of the FPL, the maximum available subsidy is reduced both by the fact that the applicable percentage applies to a higher income, and by the fact that the applicable percentage gradually rises to 9.56%. This effectively raises the marginal income tax rate for the household.
 
-It is critical to note that subsidies are only available to people whose income does not exceed 400% of the FPL. **Once household income goes above 400% of FPL, the maximum available subsidy drops to zero.**
+It is critical to note that subsidies are only available to people whose income does not exceed 400% of the FPL. **Subsidies are not available when household income exceeds 400% of FPL.** The complete loss of subsidies once household income reaches 400% of FPL creates a "cliff" and implies an effective marginal income tax rate far in excess of 100%. For a household right at 400% of FPL, a single dollar of additional income may result in a subsidy loss of thousands of dollars. Any subsidies that have already been received will be repaid in the form of an additional liability on the federal income tax return filed the following year.
 
 The following chart shows the maximum available subsidy as a function of household income for the household in this example.
 
