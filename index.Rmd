@@ -11,7 +11,13 @@ knitr::opts_chunk$set(echo = TRUE)
 source("aca-subsidies.R")
 ```
 
+Draft `r format(file.mtime("index.Rmd"), "%B %e, %Y")`
+
 *This draft is a work in progress and will be updated from time to time.*
+
+### Executive Summary
+
+The Affordable Care Act (ACA) contains an insidious feature that can cost (or save) people thousands of dollars based on a potentially small change in their income. People purchasing health insurance through the ACA qualify for premium subsidies if their income is less than 400% of the federal poverty level (FPL). These subsidies can be substantial, even tens of thousands of dollars per year. Once household income rises above 400% of the FPL, even by a dollar, no subsidy is available, and any subsidies already received must be repaid in whole. This subsidy "cliff" amounts to a an effective marginal income tax rate in excess of 100% and can create a disincentive to work for those affected. We describe how subsidies and the subsidy "cliff" are calculated and look at how the size of the cliff varies geographically and with age.
 
 ### Main features of the ACA
 
@@ -48,7 +54,7 @@ The larger of the two subsidies is the premium tax credit which is available to 
 * First determine a **reference premium** which is the second lowest Silver premium available to the insured.
 * Second determine the **applicable percentage** from the table below.
 * Third calculate a **maximum available subsidy** as the excess of the reference premium over that percentage of the insured's income.
-* Finally, the **actual subsidy** is the lesser of the premium on the policy selected by the insured and the maximum available subsidy.
+* Finally, the **actual subsidy** is the lesser of the maximum available subsidy and the premium on the policy selected by the insured.
 
 For 2018, the applicable percentage is determined from the following table, based on household income:
 
@@ -73,9 +79,9 @@ subsidy_table %>%
   kable
 ```
 
-Subsidies are available to people who purchase health insurance on an exchange and whose household income is between 100% and 400% of the FPL. For people in states that have expanded Medicaid under the ACA, subsidies are available for incomes between 138% and 400% of FPL (because almost everyone with incomes below 138% of FPL qualify for Medicaid and therefore are not eligible to buy insurance on an exchange).
+Subsidies are available to people who purchase health insurance on an exchange and whose household income is between 100% and 400% of the FPL. For people in states that have expanded Medicaid under the ACA, subsidies are available for incomes between 138% and 400% of FPL (because almost everyone with an income below 138% of FPL qualifies for Medicaid and therefore is not eligible to buy insurance on an exchange).
 
-The subsidy percentages look like this:
+The applicable percentages look like this:
 
 ```{r, echo=FALSE, message=FALSE, fig.height=3, fig.width=10}
 library(ggplot2)
@@ -108,13 +114,17 @@ Assume a married couple both age 30 with two children and a household income of 
 
 If this family purchases a Gold policy for $`r format(example_gold_premium * 12, big.mark=",")` per year, or a Silver policy for $`r format(example_reference_premium * 12, big.mark=",")` per year, their subsidy will be the full $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)`. If, instead they purchase a Bronze policy for $`r format(example_bronze_premium * 12, big.mark=",")` per year, their subsidy will be limited to the cost of the Bronze policy because it is less than the maximum available subsidy.
 
+### Subsidies rise with premiums
+
+It is worth emphasizing that subsidies are primarily driven by premiums. Since the available susidy is the excess of the reference premium over a percent of a household's income, the available subsidy rises dollar for dollar with the reference premium. High premiums therefore translate directly into high subsidies.
+
 ### Available subsidy decreases as income rises
 
-As household income gets closer to 400% of the FPL, the maximum available subsidy is reduced both by the fact that the applicable percentage applies to a higher income, and by the fact that the applicable percentage gradually rises to 9.56%. This effectively raises the marginal income tax rate for the household.
+As household income rises toward 400% of the FPL, the maximum available subsidy is reduced both by the fact that the applicable percentage applies to a higher income, and by the fact that the applicable percentage gradually rises to 9.56%. This effectively raises the marginal income tax rate for the household, because additional income results in loss of premium tax credits.
 
-It is critical to note that subsidies are only available to people whose income does not exceed 400% of the FPL. **Subsidies are not available when household income exceeds 400% of FPL.** The complete loss of subsidies once household income reaches 400% of FPL creates a "cliff" and implies an effective marginal income tax rate far in excess of 100%. For a household right at 400% of FPL, a single dollar of additional income may result in a subsidy loss of thousands of dollars. Any subsidies that have already been received will be repaid in the form of an additional liability on the federal income tax return filed the following year.
+It is critical to note that subsidies are only available to people whose income does not exceed 400% of the FPL. Subsidies are not available when household income exceeds 400% of FPL. **The complete loss of subsidies once household income reaches 400% of FPL creates a "cliff" and implies an effective marginal income tax rate far in excess of 100%.** For a household right at 400% of FPL, a single dollar of additional income may result in a subsidy loss of thousands of dollars. Any subsidies that have already been received will be repaid in the form of an additional liability on the federal income tax return filed the following year.
 
-The following chart shows the maximum available subsidy as a function of household income for the household in this example.
+The following chart shows the maximum available subsidy as a function of household income for the household in the example above.
 
 ```{r, echo=FALSE, message=FALSE}
 library(ggplot2)
@@ -122,7 +132,7 @@ library(choroplethr)
 cliff_chart(19153, "Couple", 30, 2)
 ```
 
-As shown in the chart, there is a subsidy "cliff" at 400% of FPL, or `r format(example_fpl * 4, big.mark=",")`. In this example, the size of the cliff is `r format(round(example_reference_premium * 12 - 0.0956 * 4 * example_fpl), big.mark=",")`. So, for example, if this family receives an advanced premium tax credit based on an estimated income of less than `r format(example_fpl * 4, big.mark=",")`, but their actual income for 2018 is even one dollar over this amount, they will be liable to repay the entire amount of their subsidy when they file their 2018 federal income tax return in 2019.
+As shown in the chart, there is a subsidy "cliff" at 400% of FPL, or $`r format(example_fpl * 4, big.mark=",")`. In this example, the size of the cliff is $`r format(round(example_reference_premium * 12 - 0.0956 * 4 * example_fpl), big.mark=",")`. So, for example, if this family receives an advanced premium tax credit based on an estimated income of less than $`r format(example_fpl * 4, big.mark=",")`, but their actual income for 2018 is even one dollar over this amount, they will be liable to repay the entire amount of their subsidy when they file their 2018 federal income tax return in 2019.
 
 In a given year, the size of the cliff is mainly a function of the second highest Silver premium available, which varies by location, household size, and age. Health insurance premiums generally increase with the age of the insureds, so older people tend to face higher subsidy cliffs.
 
@@ -132,19 +142,62 @@ Here is the same chart for a couple age 60 in Polk County, Iowa.
 cliff_chart(19153, "Couple", 60, 0)
 ```
 
-Since health insurance premiums also vary by location, so does the size of the cliff. Let's calculate the size of the "cliff" for similar households in every county in the US. (Only states that use the federal health insurance exchange are included. States that operate their own exchanges are marked as NA.)
+### The cliff is high when subsidies are high
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+Why are the cliff amounts so high? The cliff amount is simply the available subsidy at 400% of FPL. High premiums translate into high subsidies which translate into high cliff amounts.
+
+### Variation in cliff amounts
+
+We've already seen that cliff amounts vary by age because premiums (and therefore subsidies) vary by age.
+
+Since premiums also vary by location, so does the size of the cliff. Let's calculate the size of the "cliff" for similar households in every county in the US. (Only states that use the federal health insurance exchange are included. States that operate their own exchanges are not included.)
+
+```{r, echo=FALSE}
+c30 <- calc_cliff("Couple", 30, 2)
+c60 <- calc_cliff("Couple", 60, 0)
+```
+
+For a couple age 30 with 2 children, the 2018 cliff ranges from $`r format(round(min(c30$cliff)), big.mark=",")` to $`r format(round(max(c30$cliff)), big.mark=",")` depending on the county in which the couple lives. Here are summary statistics for the size of the cliff across all counties.
+
+```{r, echo=FALSE}
+summary(c30$cliff, digits = 5)
+```
+
+For a couple age 60 with no children, the 2018 cliff ranges from $`r format(round(min(c60$cliff)), big.mark=",")` to $`r format(round(max(c60$cliff)), big.mark=",")`, with the following summary statistics:
+
+```{r, echo=FALSE}
+summary(c60$cliff, digits = 5)
+```
+The following histograms show that distributions for both examples are skewed, with cliff amounts generally higher for the older household.
+
+```{r, echo=FALSE}
+
+ggplot(rbind(c30, c60), aes(x = cliff)) +
+  geom_histogram(bins = 30) +
+  facet_wrap(~ age, ncol = 1, labeller = as_labeller(c(`30` = "Couple age 30, 2 children", `60` = "Couple age 60, no children"))) +
+  labs(title = "Histogram of 2018 ACA Subsidy \"Cliff\"") + xlab("ACA Subsidy Cliff") +
+  ylab("Number of counties") +
+  theme_minimal()
+```
+
+The following maps show how the size of the cliff varies geographically for both example households.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=10}
 cliff_map("Couple", 30, 2)
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=10}
 cliff_map("Couple", 60, 0)
 ```
 
-<br/>
+### Summary
 
-Draft `r format(file.mtime("index.Rmd"), "%B %e, %Y")`
+* Premium subsidies are available to people with household incomes between 100% and 400% of FPL.
+* Once household income exceeds 400% of FPL, no subsidy is available and any subsidy received must be repaid.
+* High premiums translate into high subsidies.
+* High subsidies translate into a high "cliff" at 400% of FPL.
+
+<br/>
 
 Data sources:
 
