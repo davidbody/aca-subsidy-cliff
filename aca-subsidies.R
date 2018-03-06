@@ -304,7 +304,7 @@ cliff_chart <- function(fips_code, insured, age, num_children) {
                      show.legend = FALSE)
   g <- g + geom_text(aes(label = 4 * fpl, x = four_x_fpl, y = y, color = "red"), show.legend = FALSE,
                      data = four_x_fpl_df)
-  g <- g + labs(title = "2018 ACA Subsidy \"Cliff\"", subtitle = glue("{county} County, {state}, {insured} age {age}, {num_children} children"))
+  g <- g + labs(title = "2018 ACA Subsidy Cliff", subtitle = glue("{county} County, {state}, {insured} age {age}, {num_children} children"))
   g <- g + xlab("Household Income") + ylab("Maximum Available Annual Subsidy")
   g <- g + theme_minimal() + theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
   return(g)

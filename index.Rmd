@@ -11,9 +11,11 @@ knitr::opts_chunk$set(echo = TRUE)
 source("aca-subsidies.R")
 ```
 
+By [David W. Body](https://twitter.com/david_body)
+
 Draft `r format(file.mtime("index.Rmd"), "%B %e, %Y")`
 
-*This draft is a work in progress and will be updated from time to time.*
+Source and data are available at [https://github.com/davidbody/aca-subsidies](https://github.com/davidbody/aca-subsidies).
 
 ### Executive Summary
 
@@ -39,11 +41,11 @@ There are two kinds of subsidies under the ACA.
 
 #### Premium tax credits
 
-The larger of the two kinds of subsidies is used to help people pay premiums of policies purchased on health insurance exchanges set up under the ACA. These subsidies are provided in the form of "[premium tax credits](https://www.irs.gov/affordable-care-act/individuals-and-families/the-premium-tax-credit-the-basics-0)" and are available to ACA enrollees earning up to 400% of the federal poverty level (FPL). Premium tax credits are calculated based on an enrollee's expected income and can be paid in advance directly to insurance companies. When enrollees file their income tax returns the following year, premium tax credit is reconciled based on actual income and income tax liability or refund is adjusted accordingly.
+The larger of the two kinds of subsidies is used to help people pay premiums of policies purchased on health insurance exchanges set up under the ACA. These subsidies are provided in the form of "[premium tax credits](https://www.irs.gov/affordable-care-act/individuals-and-families/the-premium-tax-credit-the-basics-0)" and are available to ACA enrollees earning up to 400% of the federal poverty level (FPL). Premium tax credits are calculated based on an enrollee's expected income and can be paid in advance directly to insurance companies so enrollees can pay lower monthly premiums. When enrollees file their income tax returns the following year, premium tax credits are reconciled based on actual income, and income tax liability or refund is adjusted accordingly.
 
 #### Cost sharing reductions
 
-[Cost sharing reductions (CSR)](https://en.wikipedia.org/wiki/Cost_sharing_reductions_subsidy) subsidies are provided to reduce the copayments and deductibles for ACA enrollees with incomes under 250% of the FPL. Until 2018, these subsidies were paid to insurance companies to compensate for the costs of reducing copayments and deductibles for eligible ACA enrollees. [Starting in 2018](https://www.nytimes.com/2017/10/12/us/politics/trump-obamacare-executive-order-health-insurance.html), insurance companies will no longer receive the CSR subsidies, but will still be required to reduce copayments and deductibles. Insurance companies therefore raised premiums in order to compensate for the loss of the CSR subsidies.
+[Cost sharing reduction (CSR)](https://en.wikipedia.org/wiki/Cost_sharing_reductions_subsidy) subsidies are provided to reduce the copayments and deductibles for ACA enrollees with incomes under 250% of the FPL. Until 2018, these subsidies were paid to insurance companies to compensate for the costs of reducing copayments and deductibles for eligible ACA enrollees. [Starting in 2018](https://www.nytimes.com/2017/10/12/us/politics/trump-obamacare-executive-order-health-insurance.html), insurance companies no longer receive the CSR subsidies, but are still required to reduce copayments and deductibles. Insurance companies raised 2018 premiums to compensate for the loss of the CSR subsidies.
 
 As we'll see below, these premium increases and the resulting increase in premium tax credits creates perverse effects for certain individuals.
 
@@ -95,8 +97,6 @@ grid.arrange(apr_chart("IA") + labs(title = "Medicaid Exapnsion State") + theme(
 
 The maximum available subsidy will be the excess of the reference premium over the applicable percentage of a household's income.
 
-Note that subsidies are not available to households with incomes below 100% (138% for Medicaid expansion states) or above 400% of the FPL.
-
 ### Example
 
 Here is a concrete example of how the premium tax credit is calculated.
@@ -120,9 +120,9 @@ Regardless of whether this family purchases a gold policy for $`r format(example
 
 Note that subsidy amounts are driven directly by premiums. Since the available susidy is the excess of the reference premium over a percent of a household's income, the available subsidy rises dollar for dollar with the reference premium, all other things being equal. High premiums therefore translate directly into high subsidies.
 
-### Available subsidy decreases as income rises
+### Subsidies decrease as income rises
 
-As household income rises toward 400% of the FPL, the maximum available subsidy is reduced both by the fact that the applicable percentage applies to a higher income, and by the fact that the applicable percentage gradually rises to 9.56%. This effectively raises the marginal income tax rate for the household, because additional income results in loss of premium tax credits.
+As household income rises, the maximum available subsidy is reduced both by the fact that the applicable percentage applies to a higher income, and by the fact that the applicable percentage gradually rises to 9.56%. This effectively raises the marginal income tax rate for the household, because additional income results in loss of premium tax credits.
 
 It is critical to understand that subsidies are only available to people whose income does not exceed 400% of the FPL. Subsidies are not available when household income exceeds 400% of FPL. **The complete loss of subsidies once household income reaches 400% of FPL creates a "cliff" and implies an effective marginal income tax rate far in excess of 100%.** For a household right at 400% of FPL, a single dollar of additional income will result in a subsidy loss of potentially thousands of dollars. Any subsidies that have already been received will be repaid in the form of an additional liability on the federal income tax return filed the following year.
 
@@ -136,7 +136,7 @@ cliff_chart(19153, "Couple", 30, 0)
 
 As shown in the chart, there is a subsidy "cliff" at 400% of FPL, or $`r format(example_fpl * 4, big.mark=",")`. In this example, the size of the cliff is $`r format(round(example_reference_premium * 12 - 0.0956 * 4 * example_fpl), big.mark=",")`. So, for example, if this family receives an advanced premium tax credit based on an estimated income of less than $`r format(example_fpl * 4, big.mark=",")`, but their actual income for 2018 is even one dollar over this amount, they will be liable to repay the entire amount of their subsidy when they file their 2018 federal income tax return in 2019.
 
-In a given year, the size of the cliff is mainly a function of the second highest Silver premium available, which varies by location, household size, and age. Health insurance premiums generally increase with the age of the insureds, so older people tend to face higher subsidy cliffs.
+In a given year, the size of the cliff is mainly a function of the second highest silver premium available, which varies by location, household size, and age. Health insurance premiums generally increase with the age of the insureds, so older people tend to face higher subsidy cliffs.
 
 Here are the same charts for 2018 for an individual age 21, and couples age 40, 50, and 60 in Polk County, Iowa.
 
@@ -186,9 +186,9 @@ Why are the cliff amounts so high? The cliff amount is simply the available subs
 
 ### Variation in cliff amounts
 
-We've already seen that cliff amounts rise with age because premiums (and therefore subsidies) rise with age.
+We've already seen that cliff amounts rise with age because premiums (and therefore subsidies) rise with age, and that they also vary with location.
 
-Since premiums also vary by location, so does the size of the cliff. Let's calculate the size of the "cliff" for similar households in every county in the US. (Only states that use the federal health insurance exchange are included. States that operate their own exchanges are not included.)
+To get an idea of how cliff amounts vary by location, let's calculate the size of the cliff for similar households in every county in the US. (Only states that use the federal health insurance exchange are included. States that operate their own exchanges are not included.)
 
 ```{r cliff_data, echo=FALSE}
 library(broom)
@@ -217,7 +217,7 @@ cliff_summary <- select(cliff_summary, Age, everything())
 Here are summary statistics for the 2018 cliff amounts across all counties in the federal health insurance exchange for couples age 30, 40, 50, and 60 with no children.
 
 ```{r cliff_summary, echo=FALSE}
-kable(cliff_summary, digits = 0)
+kable(cliff_summary, digits = 0, caption = "2018 ACA subsidy cliff amounts for all counties")
 ```
 
 The following histograms show that distributions for all age examples are skewed, with cliff amounts generally higher for older households.
@@ -229,7 +229,7 @@ ggplot(all_counties, aes(x = cliff)) +
                                                        `40` = "Couple age 40, no children",
                                                        `50` = "Couple age 50, no children",
                                                        `60` = "Couple age 60, no children"))) +
-  labs(title = "Histogram of 2018 ACA Subsidy \"Cliff\"") +
+  labs(title = "Histogram of 2018 ACA Subsidy Cliff") +
   xlab("ACA Subsidy Cliff") + ylab("Number of counties") +
   theme_minimal()
 ```
@@ -237,6 +237,8 @@ ggplot(all_counties, aes(x = cliff)) +
 ### Geographic variation
 
 The following maps show how the size of the cliff varies geographically. As mentioned earlier, data is only included for states that use the federal health insurance exchange. States that run their own exchanges are coded as NA. The size of the cliff varies with location and shows strong geographical patterns. These patterns appear very similar regardless of age.
+
+It is interesting that some entire states have high or low cliffs more or less statewide. For example, Alaska, Iowa, Nebraska, Tennesee, Utah, and Wyoming appear to have high cliff amounts statewide, while Hawaii, Indiana, Michigan, Montana, New Hampshire, New Mexico, North Dakota, and Oregon appear to have low cliff amounts statewide. On the other hand, several states show much more variation from county to county, for example Arizona, Florida, Georgia, Maine, Nevada, Pennsylvania, Texas, Virginia, and Wisconsin. We know the cliff amount is primarily a function of the reference silver premium for each county, but we don't have an explanation for why these premiums vary like they do.
 
 ```{r cliff_map_age_30, echo=FALSE, message=FALSE, warning=FALSE, fig.width=10}
 cliff_map("Couple", 30, 0)
@@ -258,7 +260,30 @@ cliff_map("Couple", 60, 0)
 
 The Affordable Care Act requires insurers to offer insurance to everyone on the same terms, meaning they cannot disriminate based on pre-existing conditions. To avoid adverse selection, almost everyone is required to have a certain level of health insurance coverage or pay a penalty. Subsidies are provided to make the required coverage affordable. These subsidies are based on household income and phase out as income rises. However, no subsidy is available if household income exceeds 400% of the federal poverty level (FPL), and any subsidy received must be repaid. High premiums translate directly into high subsidies, which in turn translate into a high "cliff" at 400% of FPL.
 
-The size of the cliff varies with age and geographically, and can easily be tens of thousands of dollars for older households. Households that are affected therefore stand to lose tens of thousands of dollars if their income exceeds 400% of FPL, which amounts to a marginal income tax rate in excess of 100% and creates a substantial disincentive to work.
+The size of the cliff varies with age and geographically, and can easily be tens of thousands of dollars for older households in high-premium locations. Households that are affected therefore stand to lose tens of thousands of dollars if their income exceeds 400% of FPL, which amounts to a marginal income tax rate in excess of 100% and creates a substantial disincentive to work.
+
+### Questions for further research
+
+#### Who is affected?
+
+Who are the people most affected by high ACA subsidy cliffs and how many are there? We can speculate that some of them are likely self-employed small business owners or farmers who don't have access to group health insurance. Older households face higher premiums and therefore higher cliff amounts.
+
+#### How do affected people respond?
+
+A self-employed person facing a high subsidy cliff may be able to limit their income to avoid going over the cliff, or they may decided self-employment is no longer viable and seek employment with health insurance benefits. Others may decided to forgo health insurance and pay a penalty, while also facing the prospect of paying for health care without insurance. (The penalty has been repealed starting in 2019.) Data about household responses to the high subsidy cliffs in 2018 won't be available for a while, but it would be interesting to find out how people actually do respond. It would also be interesting to find out how many people are unaware they are affected.
+
+#### How has the size of the cliff changed over time?
+
+We know higher premiums translate into higher cliffs. We also know that premiums have increased over time. How have the subsidy cliff amounts changed over time? Data sets similar to the one analyzed here are available for 2014, 2015, 2016, and 2017. They are not all in identical formats, so a little data wrangling will be necessary before they can be compared.
+
+#### What explains the geopgraphic patterns?
+
+Why do some states have high subisdy cliffs and others low subsidy cliffs statewide, while others have significant variations across counties?
+
+#### What policy changes should be made?
+
+What policy changes could be made to affect the size and distribution of subsidy cliffs, and what are the implications if subsidy cliffs grow larger?
+
 
 <br/>
 
@@ -267,9 +292,5 @@ Data sources:
 * Health insurance plans and premiums from [HealthCare.gov](https://www.healthcare.gov/health-and-dental-plan-datasets-for-researchers-and-issuers/).
 * Federal Poverty Levels from [U.S. Department of Health and Human Services](https://aspe.hhs.gov/poverty-guidelines).
 * Applicable Percentage tables from [Internal Revenue Service](https://www.irs.gov/). PDFs of the Revenue Procedures are included in the source code repository.
-
-Source code: [https://github.com/davidbody/aca-subsidies](https://github.com/davidbody/aca-subsidies)
-
-Author: [David W. Body](https://twitter.com/david_body)
 
 ---
