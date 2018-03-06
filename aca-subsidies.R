@@ -42,11 +42,6 @@ second_lowest_silver_premiums <- tidy_aca_2018 %>%
 
 tidy_aca_2018 <- inner_join(tidy_aca_2018, second_lowest_silver_premiums, by = c("FIPS County Code", "insured", "age", "num_children"))
 
-# tidy_aca_2018 %>%
-#   group_by(`FIPS County Code`, insured, age, num_children, `Metal Level`) %>%
-#   summarize(count = n()) %>%
-#   filter(`Metal Level` == "Silver", count > 2)
-
 premiums_for <- function(df, fips_code, metal_level, insured, age, num_children) {
   df %>%
     filter(`FIPS County Code` == !!fips_code,
@@ -197,8 +192,6 @@ apr_chart <- function(state) {
     theme_minimal()
 }
 
-# grid.arrange(apr_chart("TX") + labs(title = "Non-Medicaid Expansion State"), apr_chart("IA") + labs(title = "Medicaid Exapnsion State"), nrow = 1)
-
 annual_subsidy <- function(annual_income, federal_poverty_level, silver_monthly_premium, state) {
   income_percent_of_fpl <- (annual_income / federal_poverty_level)
   apr <- applicable_percent(income_percent_of_fpl, state)
@@ -287,14 +280,6 @@ cliff_chart <- function(fips_code, insured, age, num_children) {
 
   g <- ggplot(df, aes(x = income, y = subsidy))
   g <- g + geom_line()
-  # g <- g + geom_vline(data = fpl_df,
-  #                     aes(xintercept = upper_percent * fpl),
-  #                     linetype = 2)
-  # g <- g + geom_text(aes(label = paste(upper_percent * 100, "%"),
-  #                        x = upper_percent * fpl,
-  #                        y = 15000),
-  #                    data = fpl_df,
-  #                    angle = 90, hjust = 1, vjust = -1)
   g <- g + geom_segment(aes(x = 0, y = cliff, xend = 4 * fpl, yend = cliff, color = "red"), show.legend = FALSE)
   g <- g + geom_text(aes(label = cliff,
                          x = x, y = cliff,
@@ -314,17 +299,3 @@ cliff_chart <- function(fips_code, insured, age, num_children) {
 # cliff_chart(19153, "Individual", 21, 0)
 # cliff_chart(19153, "Couple", 50, 2)
 # cliff_chart(19153, "Couple", 30, 1)
-
-states_with_one_issuer <- aca2018 %>%
-  group_by(`State Code`) %>%
-  mutate(n_issuers = n_distinct(`Issuer Name`)) %>%
-  filter(n_issuers == 1) %>%
-  select(`State Code`, `Issuer Name`) %>%
-  distinct()
-
-counties_with_one_issuer <- aca2018 %>%
-  group_by(`FIPS County Code`) %>%
-  mutate(n_issuers = n_distinct(`Issuer Name`)) %>%
-  filter(n_issuers == 1) %>%
-  select('FIPS County Code', `State Code`, `County Name`, `Issuer Name`) %>%
-  distinct()
