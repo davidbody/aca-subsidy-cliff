@@ -191,43 +191,41 @@ We've already seen that cliff amounts rise with age because premiums (and theref
 Since premiums also vary by location, so does the size of the cliff. Let's calculate the size of the "cliff" for similar households in every county in the US. (Only states that use the federal health insurance exchange are included. States that operate their own exchanges are not included.)
 
 ```{r cliff_data, echo=FALSE}
-c30 <- calc_cliff("Couple", 30, 0)
-c40 <- calc_cliff("Couple", 40, 0)
-c50 <- calc_cliff("Couple", 50, 0)
-c60 <- calc_cliff("Couple", 60, 0)
-
 library(broom)
 
-s30 <- summary(c30$cliff)
-s40 <- summary(c40$cliff)
-s50 <- summary(c50$cliff)
-s60 <- summary(c60$cliff)
+ages <- c(30, 40, 50, 60)
 
-t30 <- tidy(s30)
-t30$age <- 30
-t40 <- tidy(s40)
-t40$age <- 40
-t50 <- tidy(s50)
-t50$age <- 50
-t60 <- tidy(s60)
-t60$age <- 60
+all_counties <- data.frame()
+cliff_summary <- data.frame()
 
-all <- rbind(t30, t40, t50, t60) %>%
-  select(Age = age, everything())
+for (i in seq_along(ages)) {
+  age <- ages[i]
+
+  c <- calc_cliff("Couple", age, 0)
+  c$Age <- age
+  all_counties <- bind_rows(all_counties, c)
+
+  s <- summary(c$cliff)
+  s <- tidy(s)
+  s$Age <- age
+  cliff_summary <- bind_rows(cliff_summary, s)
+}
+
+cliff_summary <- select(cliff_summary, Age, everything())
 ```
 
 Here are summary statistics for the 2018 cliff amounts across all counties in the federal health insurance exchange for couples age 30, 40, 50, and 60 with no children.
 
 ```{r cliff_summary, echo=FALSE}
-kable(all)
+kable(cliff_summary, digits = 0)
 ```
 
 The following histograms show that distributions for all age examples are skewed, with cliff amounts generally higher for older households.
 
 ```{r cliff_histograms, echo=FALSE, fig.height=8}
-ggplot(rbind(c30, c40, c50, c60), aes(x = cliff)) +
+ggplot(all_counties, aes(x = cliff)) +
   geom_histogram(bins = 30) +
-  facet_wrap(~ age, ncol = 1, labeller = as_labeller(c(`30` = "Couple age 30, no children",
+  facet_wrap(~ Age, ncol = 1, labeller = as_labeller(c(`30` = "Couple age 30, no children",
                                                        `40` = "Couple age 40, no children",
                                                        `50` = "Couple age 50, no children",
                                                        `60` = "Couple age 60, no children"))) +
