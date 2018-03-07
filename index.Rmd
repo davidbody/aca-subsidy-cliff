@@ -15,7 +15,7 @@ By [David W. Body](https://twitter.com/david_body)
 
 Draft `r format(file.mtime("index.Rmd"), "%B %e, %Y")`
 
-Source and data are available at [https://github.com/davidbody/aca-subsidies](https://github.com/davidbody/aca-subsidies).
+Source and data are available at [https://github.com/davidbody/aca-subsidy-cliff](https://github.com/davidbody/aca-subsidy-cliff).
 
 ### Executive Summary
 
@@ -258,7 +258,7 @@ cliff_map("Couple", 60, 0)
 
 ### Summary
 
-The Affordable Care Act requires insurers to offer insurance to everyone on the same terms, meaning they cannot disriminate based on pre-existing conditions. To avoid adverse selection, almost everyone is required to have a certain level of health insurance coverage or pay a penalty. Subsidies are provided to make the required coverage affordable. These subsidies are based on household income and phase out as income rises. However, no subsidy is available if household income exceeds 400% of the federal poverty level (FPL), and any subsidy received must be repaid. High premiums translate directly into high subsidies, which in turn translate into a high "cliff" at 400% of FPL.
+The Affordable Care Act requires insurers to offer insurance to everyone on the same terms, meaning they cannot discriminate based on pre-existing conditions. To avoid adverse selection, almost everyone is required to have a certain level of health insurance coverage or pay a penalty. Subsidies are provided to make the required coverage affordable. These subsidies are based on household income and phase out as income rises. However, no subsidy is available if household income exceeds 400% of the federal poverty level (FPL), and any subsidy received must be repaid. High premiums translate directly into high subsidies, which in turn translate into a high "cliff" at 400% of FPL.
 
 The size of the cliff varies with age and geographically, and can easily be tens of thousands of dollars for older households in high-premium locations. Households that are affected therefore stand to lose tens of thousands of dollars if their income exceeds 400% of FPL, which amounts to a marginal income tax rate in excess of 100% and creates a substantial disincentive to work.
 
@@ -276,9 +276,9 @@ A self-employed person facing a high subsidy cliff may be able to limit their in
 
 We know higher premiums translate into higher cliffs. We also know that premiums have increased over time. How have the subsidy cliff amounts changed over time? Data sets similar to the one analyzed here are available for 2014, 2015, 2016, and 2017. They are not all in identical formats, so a little data wrangling will be necessary before they can be compared.
 
-#### What explains the geopgraphic patterns?
+#### What explains the geographic patterns?
 
-Why do some states have high subisdy cliffs and others low subsidy cliffs statewide, while others have significant variations across counties?
+Why do some states have high subsidy cliffs and others low subsidy cliffs statewide, while others have significant variations across counties?
 
 #### What policy changes should be made?
 
