@@ -13,9 +13,7 @@ source("aca-subsidies.R")
 
 By [David W. Body](https://twitter.com/david_body)
 
-Draft `r format(file.mtime("index.Rmd"), "%B %e, %Y")`
-
-Source and data are available at [https://github.com/davidbody/aca-subsidy-cliff](https://github.com/davidbody/aca-subsidy-cliff).
+`r format(file.mtime("index.Rmd"), "%B %e, %Y")`
 
 ### Executive Summary
 
@@ -110,15 +108,16 @@ example_reference_premium <- 1165.22
 example_maximum_subsidy <- annual_subsidy(example_income, example_fpl, example_reference_premium, "IA")
 example_gold_premium <- 1295.92
 example_bronze_premium <- 945.24
+fd <- function(x, ...) { format(x, big.mark=",", ...)}
 ```
 
-Assume a married couple both age 30 with no children and a household income of $`r format(example_income, big.mark=",")` living in Polk County, Iowa. The 2018 FPL for an Iowa household with 2 people is $`r format(example_fpl, big.mark=",")`. Their income is therefore 275% of the FPL, which means the applicable percentage from the table above will be half-way between 8.10% and 9.50%, or `r example_applicable_percentage`%. The reference premium is the second lowest silver premium available. For this couple  in 2018, only one silver plan is available, so the reference premium is the premium for that plan, which is $`r format(example_reference_premium, big.mark=",", nsmall=2)` per month, or $`r format(example_reference_premium * 12, big.mark=",", nsmall=2)` per year. The maximum available subsidy will be the amount by which the reference premium exceeds `r example_applicable_percentage`% of their income, or $`r format(example_reference_premium * 12, big.mark=",", nsmall=2)` - `r example_applicable_percentage / 100` x $`r format(example_income, big.mark=",")`, which equals $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)`.
+Assume a married couple both age 30 with no children and a household income of $`r fd(example_income)` living in Polk County, Iowa. The 2018 FPL for an Iowa household with 2 people is $`r fd(example_fpl)`. Their income is therefore 275% of the FPL, which means the applicable percentage from the table above will be half-way between 8.10% and 9.50%, or `r example_applicable_percentage`%. The reference premium is the second lowest silver premium available. For this couple  in 2018, only one silver plan is available, so the reference premium is the premium for that plan, which is $`r fd(example_reference_premium, nsmall=2)` per month, or $`r fd(example_reference_premium * 12, nsmall=2)` per year. The maximum available subsidy will be the amount by which the reference premium exceeds `r example_applicable_percentage`% of their income, or $`r fd(example_reference_premium * 12, nsmall=2)` - `r example_applicable_percentage / 100` x $`r fd(example_income)`, which equals $`r fd(example_maximum_subsidy, nsmall=2)`.
 
-Regardless of whether this family purchases a gold policy for $`r format(example_gold_premium * 12, big.mark=",")` per year, or a silver policy for $`r format(example_reference_premium * 12, big.mark=",")` per year, or a bronze policy for $`r format(example_bronze_premium * 12, big.mark=",")` per year, their subsidy will be the full $`r format(example_maximum_subsidy, big.mark=",", nsmall=2)` because this is less than the cost of any of these policies.
+Regardless of whether this family purchases a gold policy for $`r fd(example_gold_premium * 12)` per year, or a silver policy for $`r fd(example_reference_premium * 12)` per year, or a bronze policy for $`r fd(example_bronze_premium * 12)` per year, their subsidy will be the full $`r fd(example_maximum_subsidy, nsmall=2)` because this is less than the cost of any of these policies.
 
 ### Subsidies rise with premiums
 
-Note that subsidy amounts are driven directly by premiums. Since the available susidy is the excess of the reference premium over a percent of a household's income, the available subsidy rises dollar for dollar with the reference premium, all other things being equal. High premiums therefore translate directly into high subsidies.
+Note that subsidy amounts are driven directly by premiums. Since the available subsidy is the excess of the reference premium over a percent of a household's income, the available subsidy rises dollar for dollar with the reference premium, all other things being equal. High premiums therefore translate directly into high subsidies.
 
 ### Subsidies decrease as income rises
 
@@ -134,7 +133,7 @@ library(choroplethr)
 cliff_chart(19153, "Couple", 30, 0)
 ```
 
-As shown in the chart, there is a subsidy "cliff" at 400% of FPL, or $`r format(example_fpl * 4, big.mark=",")`. In this example, the size of the cliff is $`r format(round(example_reference_premium * 12 - 0.0956 * 4 * example_fpl), big.mark=",")`. So, for example, if this family receives an advanced premium tax credit based on an estimated income of less than $`r format(example_fpl * 4, big.mark=",")`, but their actual income for 2018 is even one dollar over this amount, they will be liable to repay the entire amount of their subsidy when they file their 2018 federal income tax return in 2019.
+As shown in the chart, there is a subsidy "cliff" at 400% of FPL, or $`r fd(example_fpl * 4)`. In this example, the size of the cliff is $`r fd(round(example_reference_premium * 12 - 0.0956 * 4 * example_fpl))`. So, for example, if this family receives an advanced premium tax credit based on an estimated income of less than $`r fd(example_fpl * 4)`, but their actual income for 2018 is even one dollar over this amount, they will be liable to repay the entire amount of their subsidy when they file their 2018 federal income tax return in 2019.
 
 In a given year, the size of the cliff is mainly a function of the second highest silver premium available, which varies by location, household size, and age. Health insurance premiums generally increase with the age of the insureds, so older people tend to face higher subsidy cliffs.
 
@@ -238,7 +237,7 @@ ggplot(all_counties, aes(x = cliff)) +
 
 The following maps show how the size of the cliff varies geographically. As mentioned earlier, data is only included for states that use the federal health insurance exchange. States that run their own exchanges are coded as NA. The size of the cliff varies with location and shows strong geographical patterns. These patterns appear very similar regardless of age.
 
-It is interesting that some entire states have high or low cliffs more or less statewide. For example, Alaska, Iowa, Nebraska, Tennesee, Utah, and Wyoming appear to have high cliff amounts statewide, while Hawaii, Indiana, Michigan, Montana, New Hampshire, New Mexico, North Dakota, and Oregon appear to have low cliff amounts statewide. On the other hand, several states show much more variation from county to county, for example Arizona, Florida, Georgia, Maine, Nevada, Pennsylvania, Texas, Virginia, and Wisconsin. We know the cliff amount is primarily a function of the reference silver premium for each county, but we don't have an explanation for why these premiums vary like they do.
+It is interesting that some entire states have high or low cliffs more or less statewide. For example, Alaska, Iowa, Nebraska, Tennessee, Utah, and Wyoming appear to have high cliff amounts statewide, while Hawaii, Indiana, Michigan, Montana, New Hampshire, New Mexico, North Dakota, and Oregon appear to have low cliff amounts statewide. On the other hand, several states show much more variation from county to county, for example Arizona, Florida, Georgia, Maine, Nevada, Pennsylvania, Texas, Virginia, and Wisconsin. We know the cliff amount is primarily a function of the reference silver premium for each county, but we don't have an explanation for why these premiums vary like they do.
 
 ```{r cliff_map_age_30, echo=FALSE, message=FALSE, warning=FALSE, fig.width=10}
 cliff_map("Couple", 30, 0)
@@ -292,5 +291,7 @@ Data sources:
 * Health insurance plans and premiums from [HealthCare.gov](https://www.healthcare.gov/health-and-dental-plan-datasets-for-researchers-and-issuers/).
 * Federal Poverty Levels from [U.S. Department of Health and Human Services](https://aspe.hhs.gov/poverty-guidelines).
 * Applicable Percentage tables from [Internal Revenue Service](https://www.irs.gov/). PDFs of the Revenue Procedures are included in the source code repository.
+
+Source code repository: [https://github.com/davidbody/aca-subsidy-cliff](https://github.com/davidbody/aca-subsidy-cliff).
 
 ---
