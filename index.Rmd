@@ -17,7 +17,7 @@ By [David W. Body](https://twitter.com/david_body)
 
 ### Executive Summary
 
-The Affordable Care Act (ACA) contains an insidious feature that can cost (or save) people thousands of dollars based on whether their household income is greater (or less) than a specific amount. People purchasing health insurance through the ACA qualify for premium subsidies if their income is less than 400% of the federal poverty level (FPL). These subsidies can be substantial, even tens of thousands of dollars per year. But if household income exceeds 400% of the FPL, even by a dollar, no subsidy is available, and any subsidies already received must be repaid. This subsidy "cliff" amounts to a an effective marginal income tax rate in excess of 100% and can create a disincentive to work for those affected. This document describes how subsidies and the subsidy "cliff" are calculated and looks at how the size of the cliff varies with age and geographically.
+The Affordable Care Act (ACA) contains an insidious feature that can cost (or save) people thousands of dollars based on whether their household income is greater (or less) than a specific amount. People purchasing health insurance through the ACA qualify for premium subsidies if their income is less than 400% of the federal poverty level (FPL). These subsidies can be substantial, even tens of thousands of dollars per year. But if household income exceeds 400% of the FPL, even by a dollar, no subsidy is available, and any subsidies already received must be repaid. This subsidy "cliff" amounts to an effective marginal income tax rate in excess of 100% and can create a disincentive to work for those affected. This document describes how subsidies and the subsidy "cliff" are calculated and looks at how the size of the cliff varies with age and geographically.
 
 ### Main features of the ACA
 
@@ -269,7 +269,7 @@ Who are the people most affected by high ACA subsidy cliffs and how many are the
 
 #### How do affected people respond?
 
-A self-employed person facing a high subsidy cliff may be able to limit their income to avoid going over the cliff, or they may decided self-employment is no longer viable and seek employment with health insurance benefits. Others may decided to forgo health insurance and pay a penalty, while also facing the prospect of paying for health care without insurance. (The penalty has been repealed starting in 2019.) Data about household responses to the high subsidy cliffs in 2018 won't be available for a while, but it would be interesting to find out how people actually do respond. It would also be interesting to find out how many people are unaware they are affected.
+A self-employed person facing a high subsidy cliff may be able to limit their income to avoid going over the cliff, or they may decided self-employment is no longer viable and seek employment with health insurance benefits. Others may decide to forgo health insurance and pay a penalty, while also facing the prospect of paying for health care without insurance. (The penalty has been repealed starting in 2019.) Data about household responses to the high subsidy cliffs in 2018 won't be available for a while, but it would be interesting to find out how people actually do respond. It would also be interesting to find out how many people are unaware they are affected.
 
 #### How has the size of the cliff changed over time?
 
